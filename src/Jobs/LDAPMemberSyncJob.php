@@ -3,12 +3,12 @@
 namespace SilverStripe\ActiveDirectory\Jobs;
 
 use Exception;
+use SilverStripe\ActiveDirectory\Tasks\LDAPMemberSyncTask;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Injector\Injector;
-use SilverStripe\QueuedJobs\Services\AbstractQueuedJob;
-use SilverStripe\QueuedJobs\Services\QueuedJob;
-use SilverStripe\QueuedJobs\Services\QueuedJobService;
-
+use Symbiote\QueuedJobs\Services\AbstractQueuedJob;
+use Symbiote\QueuedJobs\Services\QueuedJob;
+use Symbiote\QueuedJobs\Services\QueuedJobService;
 
 /**
  * Class LDAPMemberSyncJob
@@ -47,7 +47,7 @@ class LDAPMemberSyncJob extends AbstractQueuedJob
      */
     public function getTitle()
     {
-        return _t('LDAPMemberSyncJob.SYNCTITLE', 'Sync all users from Active Directory');
+        return _t(__CLASS__ . '.SYNCTITLE', 'Sync all users from Active Directory');
     }
 
     /**
@@ -64,7 +64,7 @@ class LDAPMemberSyncJob extends AbstractQueuedJob
     public function validateRegenerateTime()
     {
         $regenerateTime = Config::inst()->get(
-            'SilverStripe\\ActiveDirectory\\Jobs\\LDAPMemberSyncJob',
+            LDAPMemberSyncJob::class,
             'regenerate_time'
         );
 
@@ -80,17 +80,17 @@ class LDAPMemberSyncJob extends AbstractQueuedJob
     public function process()
     {
         $regenerateTime = Config::inst()->get(
-            'SilverStripe\\ActiveDirectory\\Jobs\\LDAPMemberSyncJob',
+            LDAPMemberSyncJob::class,
             'regenerate_time'
         );
         if ($regenerateTime) {
             $this->validateRegenerateTime();
 
-            $nextJob = Injector::inst()->create('SilverStripe\\ActiveDirectory\\Jobs\\LDAPMemberSyncJob');
+            $nextJob = Injector::inst()->create(LDAPMemberSyncJob::class);
             singleton(QueuedJobService::class)->queueJob($nextJob, date('Y-m-d H:i:s', time() + $regenerateTime));
         }
 
-        $task = Injector::inst()->create('SilverStripe\\ActiveDirectory\\Tasks\\LDAPMemberSyncTask');
+        $task = Injector::inst()->create(LDAPMemberSyncTask::class);
         $task->run(null);
 
         $this->isComplete = true;

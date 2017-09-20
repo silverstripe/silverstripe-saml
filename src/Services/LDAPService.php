@@ -194,14 +194,14 @@ class LDAPService implements Flushable
         // show better errors than the defaults for various status codes returned by LDAP
         if (!empty($messages[1]) && strpos($messages[1], 'NT_STATUS_ACCOUNT_LOCKED_OUT') !== false) {
             $message = _t(
-                'LDAPService.ACCOUNTLOCKEDOUT',
+                __CLASS__ . '.ACCOUNTLOCKEDOUT',
                 'Your account has been temporarily locked because of too many failed login attempts. ' .
                 'Please try again later.'
             );
         }
         if (!empty($messages[1]) && strpos($messages[1], 'NT_STATUS_LOGON_FAILURE') !== false) {
             $message = _t(
-                'LDAPService.INVALIDCREDENTIALS',
+                __CLASS__ . '.INVALIDCREDENTIALS',
                 'The provided details don\'t seem to be correct. Please try again.'
             );
         }
@@ -209,7 +209,8 @@ class LDAPService implements Flushable
         return [
             'success' => $result->getCode() === 1,
             'identity' => $result->getIdentity(),
-            'message' => $message
+            'message' => $message,
+            'code' => $result->getCode()
         ];
     }
 
@@ -435,7 +436,12 @@ class LDAPService implements Flushable
     {
         $searchLocations = $this->config()->users_search_locations ?: [null];
         foreach ($searchLocations as $searchLocation) {
-            $records = $this->gateway->getUserByUsername($username, $searchLocation, Ldap::SEARCH_SCOPE_SUB, $attributes);
+            $records = $this->gateway->getUserByUsername(
+                $username,
+                $searchLocation,
+                Ldap::SEARCH_SCOPE_SUB,
+                $attributes
+            );
             if ($records) {
                 return $records[0];
             }
@@ -488,26 +494,29 @@ class LDAPService implements Flushable
      * Constraints:
      * - GUID of the member must have already been set, for integrity reasons we don't allow it to change here.
      *
-     * @param Member
+     * @param Member $member
      * @param array|null $data If passed, this is pre-existing AD attribute data to update the Member with.
      *            If not given, the data will be looked up by the user's GUID.
+     * @param bool $updateGroups controls whether to run the resource-intensive group update function as well. This is
+     *                          skipped during login to reduce load.
      * @return bool
+     * @internal param $Member
      */
-    public function updateMemberFromLDAP(Member $member, $data = null)
+    public function updateMemberFromLDAP(Member $member, $data = null, $updateGroups = true)
     {
         if (!$this->enabled()) {
             return false;
         }
 
         if (!$member->GUID) {
-            $this->getLogger()->warn(sprintf('Cannot update Member ID %s, GUID not set', $member->ID));
+            $this->getLogger()->warning(sprintf('Cannot update Member ID %s, GUID not set', $member->ID));
             return false;
         }
 
         if (!$data) {
             $data = $this->getUserByGUID($member->GUID);
             if (!$data) {
-                $this->getLogger()->warn(sprintf('Could not retrieve data for user. GUID: %s', $member->GUID));
+                $this->getLogger()->warning(sprintf('Could not retrieve data for user. GUID: %s', $member->GUID));
                 return false;
             }
         }
@@ -519,7 +528,8 @@ class LDAPService implements Flushable
             if (!isset($data[$attribute])) {
                 $this->getLogger()->notice(
                     sprintf(
-                        'Attribute %s configured in Member.ldap_field_mappings, but no available attribute in AD data (GUID: %s, Member ID: %s)',
+                        'Attribute %s configured in Member.ldap_field_mappings, ' .
+                                'but no available attribute in AD data (GUID: %s, Member ID: %s)',
                         $attribute,
                         $data['objectguid'],
                         $member->ID
@@ -534,9 +544,10 @@ class LDAPService implements Flushable
                 if ($imageClass !== Image::class
                     && !is_subclass_of($imageClass, Image::class)
                 ) {
-                    $this->getLogger()->warn(
+                    $this->getLogger()->warning(
                         sprintf(
-                            'Member field %s configured for thumbnailphoto AD attribute, but it isn\'t a valid relation to an Image class',
+                            'Member field %s configured for thumbnailphoto AD attribute, but it isn\'t a ' .
+                            'valid relation to an Image class',
                             $field
                         )
                     );
@@ -575,7 +586,7 @@ class LDAPService implements Flushable
         if ($this->config()->default_group) {
             $group = Group::get()->filter('Code', $this->config()->default_group)->limit(1)->first();
             if (!($group && $group->exists())) {
-                $this->getLogger()->warn(
+                $this->getLogger()->warning(
                     sprintf(
                         'LDAPService.default_group misconfiguration! There is no such group with Code = \'%s\'',
                         $this->config()->default_group
@@ -597,13 +608,28 @@ class LDAPService implements Flushable
         // the Member, in effect deleting all their LDAP group associations!
         $member->writeWithoutSync();
 
-        // ensure the user is in any mapped groups
+        if ($updateGroups) {
+            $this->updateMemberGroups($data, $member);
+        }
+
+        // This will throw an exception if there are two distinct GUIDs with the same email address.
+        // We are happy with a raw 500 here at this stage.
+        $member->write();
+    }
+
+    /**
+     * Ensure the user is mapped to any applicable groups.
+     * @param array $data
+     * @param Member $member
+     */
+    public function updateMemberGroups($data, Member $member)
+    {
         if (isset($data['memberof'])) {
             $ldapGroups = is_array($data['memberof']) ? $data['memberof'] : [$data['memberof']];
             foreach ($ldapGroups as $groupDN) {
                 foreach (LDAPGroupMapping::get() as $mapping) {
                     if (!$mapping->DN) {
-                        $this->getLogger()->warn(
+                        $this->getLogger()->warning(
                             sprintf(
                                 'LDAPGroupMapping ID %s is missing DN field. Skipping',
                                 $mapping->ID
@@ -656,18 +682,17 @@ class LDAPService implements Flushable
             )
         );
 
-        foreach ($groupRecords as $groupRecord) {
-            if (!in_array($groupRecord['GroupID'], $mappedGroupIDs)) {
-                $group = Group::get()->byId($groupRecord['GroupID']);
-                // Some groups may no longer exist. SilverStripe does not clean up join tables.
-                if ($group) {
-                    $group->Members()->remove($member);
+        if (!empty($mappedGroupIDs)) {
+            foreach ($groupRecords as $groupRecord) {
+                if (!in_array($groupRecord['GroupID'], $mappedGroupIDs)) {
+                    $group = Group::get()->byId($groupRecord['GroupID']);
+                    // Some groups may no longer exist. SilverStripe does not clean up join tables.
+                    if ($group) {
+                        $group->Members()->remove($member);
+                    }
                 }
             }
         }
-        // This will throw an exception if there are two distinct GUIDs with the same email address.
-        // We are happy with a raw 500 here at this stage.
-        $member->write();
     }
 
     /**
@@ -1014,10 +1039,10 @@ class LDAPService implements Flushable
         $this->extend('onBeforeSetPassword', $member, $password, $validationResult);
 
         if (!$member->GUID) {
-            $this->getLogger()->warn(sprintf('Cannot update Member ID %s, GUID not set', $member->ID));
+            $this->getLogger()->warning(sprintf('Cannot update Member ID %s, GUID not set', $member->ID));
             $validationResult->addError(
                 _t(
-                    'LDAPAuthenticator.NOUSER',
+                    'SilverStripe\\ActiveDirectory\\Authenticators\\LDAPAuthenticator.NOUSER',
                     'Your account hasn\'t been setup properly, please contact an administrator.'
                 )
             );
@@ -1028,7 +1053,7 @@ class LDAPService implements Flushable
         if (empty($userData['distinguishedname'])) {
             $validationResult->addError(
                 _t(
-                    'LDAPAuthenticator.NOUSER',
+                    'SilverStripe\\ActiveDirectory\\Authenticators\\LDAPAuthenticator.NOUSER',
                     'Your account hasn\'t been setup properly, please contact an administrator.'
                 )
             );

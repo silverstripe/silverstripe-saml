@@ -1,11 +1,10 @@
 mappings:
   LDAPAuthenticator: SilverStripe\ActiveDirectory\Authenticators\LDAPAuthenticator
-  LDAPLoginForm: SilverStripe\ActiveDirectory\Authenticators\LDAPLoginForm
+  LDAPLoginForm: SilverStripe\ActiveDirectory\Forms\LDAPLoginForm
   SAMLAuthenticator: SilverStripe\ActiveDirectory\Authenticators\SAMLAuthenticator
   SAMLLoginForm: SilverStripe\ActiveDirectory\Authenticators\SAMLLoginForm
   SAMLSecurityExtension: SilverStripe\ActiveDirectory\Authenticators\SAMLSecurityExtension
   LDAPDebugController: SilverStripe\ActiveDirectory\Control\LDAPDebugController
-  LDAPSecurityController: SilverStripe\ActiveDirectory\Control\LDAPSecurityController
   SAMLController: SilverStripe\ActiveDirectory\Control\SAMLController
   LDAPGroupExtension: SilverStripe\ActiveDirectory\Extensions\LDAPGroupExtension
   LDAPMemberExtension: SilverStripe\ActiveDirectory\Extensions\LDAPMemberExtension

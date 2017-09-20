@@ -4,6 +4,7 @@ namespace SilverStripe\ActiveDirectory\Tasks;
 
 use Exception;
 use SilverStripe\Control\Director;
+use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Dev\BuildTask;
 use SilverStripe\ORM\DB;
@@ -45,7 +46,7 @@ class LDAPMemberSyncTask extends BuildTask
      */
     public function getTitle()
     {
-        return _t('LDAPMemberSyncJob.SYNCTITLE', 'Sync all users from Active Directory');
+        return _t(__CLASS__ . '.SYNCTITLE', 'Sync all users from Active Directory');
     }
 
     /**

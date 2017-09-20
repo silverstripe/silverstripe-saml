@@ -5,11 +5,15 @@ namespace SilverStripe\ActiveDirectory\Authenticators;
 use SilverStripe\ActiveDirectory\Helpers\SAMLHelper;
 use SilverStripe\Control\Controller;
 use Silverstripe\Control\Director;
+use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Control\Session;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Forms\Form;
+use SilverStripe\ORM\ValidationResult;
 use SilverStripe\Security\Authenticator;
+use SilverStripe\Security\Member;
+use SilverStripe\Security\MemberAuthenticator\MemberAuthenticator;
 
 /**
  * Class SAMLAuthenticator
@@ -27,7 +31,7 @@ use SilverStripe\Security\Authenticator;
  *
  * @package activedirectory
  */
-class SAMLAuthenticator extends Authenticator
+class SAMLAuthenticator extends MemberAuthenticator
 {
     /**
      * @var string
@@ -57,16 +61,32 @@ class SAMLAuthenticator extends Authenticator
      * will be delivered to the SAMLController::acs.
      *
      * @param array $data
-     * @param Form $form
+     * @param HTTPRequest $request
+     * @param ValidationResult|null $result
      * @return bool|Member|void
-     * @throws SS_HTTPResponse_Exception
      */
-    public static function authenticate($data, Form $form = null)
+    public function authenticate(array $data, HTTPRequest $request, ValidationResult &$result = null)
     {
         // $data is not used - the form is just one button, with no fields.
         $auth = Injector::inst()->get(SAMLHelper::class)->getSAMLAuth();
-        Session::set('BackURL', isset($data['BackURL']) ? $data['BackURL'] : null);
-        Session::save();
+        $request->getSession()->set('BackURL', isset($data['BackURL']) ? $data['BackURL'] : null);
+        $request->getSession()->save($request);
         $auth->login(Director::absoluteBaseURL().'saml/');
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getLoginHandler($link)
+    {
+        return SAMLLoginHandler::create($link, $this);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function supportedServices()
+    {
+        return Authenticator::LOGIN | Authenticator::LOGOUT;
     }
 }

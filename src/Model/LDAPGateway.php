@@ -30,7 +30,7 @@ class LDAPGateway
     private static $options = [];
 
     /**
-     * @var Zend\Ldap\Ldap
+     * @var Ldap
      */
     private $ldap;
 
@@ -103,21 +103,29 @@ class LDAPGateway
      * Query for LDAP nodes (organizational units, containers, and domains).
      *
      * @param null|string $baseDn The DN to search from. Default is the baseDn option in the connection if not given
-     * @param int $scope The scope to perform the search. Zend_Ldap::SEARCH_SCOPE_ONE, Zend_LDAP::SEARCH_SCOPE_BASE. Default is Zend_Ldap::SEARCH_SCOPE_SUB
+     * @param int $scope The scope to perform the search. Zend_Ldap::SEARCH_SCOPE_ONE, Zend_LDAP::SEARCH_SCOPE_BASE.
+     *          Default is Zend_Ldap::SEARCH_SCOPE_SUB
      * @param array $attributes Restrict to specific AD attributes. An empty array will return all attributes
      * @param string $sort Sort results by this attribute if given
      * @return array
      */
     public function getNodes($baseDn = null, $scope = Ldap::SEARCH_SCOPE_SUB, $attributes = [], $sort = '')
     {
-        return $this->search('(|(objectClass=organizationalUnit)(objectClass=container)(objectClass=domain))', $baseDn, $scope, $attributes, $sort);
+        return $this->search(
+            '(|(objectClass=organizationalUnit)(objectClass=container)(objectClass=domain))',
+            $baseDn,
+            $scope,
+            $attributes,
+            $sort
+        );
     }
 
     /**
      * Query for LDAP groups.
      *
      * @param null|string $baseDn The DN to search from. Default is the baseDn option in the connection if not given
-     * @param int $scope The scope to perform the search. Zend_Ldap::SEARCH_SCOPE_ONE, Zend_LDAP::SEARCH_SCOPE_BASE. Default is Zend_Ldap::SEARCH_SCOPE_SUB
+     * @param int $scope The scope to perform the search. Zend_Ldap::SEARCH_SCOPE_ONE, Zend_LDAP::SEARCH_SCOPE_BASE.
+     *          Default is Zend_Ldap::SEARCH_SCOPE_SUB
      * @param array $attributes Restrict to specific AD attributes. An empty array will return all attributes
      * @param string $sort Sort results by this attribute if given
      * @return array
@@ -132,7 +140,8 @@ class LDAPGateway
      *
      * @param string $dn
      * @param null|string $baseDn The DN to search from. Default is the baseDn option in the connection if not given
-     * @param int $scope The scope to perform the search. Zend_Ldap::SEARCH_SCOPE_ONE, Zend_LDAP::SEARCH_SCOPE_BASE. Default is Zend_Ldap::SEARCH_SCOPE_SUB
+     * @param int $scope The scope to perform the search. Zend_Ldap::SEARCH_SCOPE_ONE, Zend_LDAP::SEARCH_SCOPE_BASE.
+     *                  Default is Zend_Ldap::SEARCH_SCOPE_SUB
      * @param array $attributes Restrict to specific AD attributes. An empty array will return all attributes
      * @return array
      */
@@ -151,7 +160,8 @@ class LDAPGateway
      *
      * @param string $guid
      * @param null|string $baseDn The DN to search from. Default is the baseDn option in the connection if not given
-     * @param int $scope The scope to perform the search. Zend_Ldap::SEARCH_SCOPE_ONE, Zend_LDAP::SEARCH_SCOPE_BASE. Default is Zend_Ldap::SEARCH_SCOPE_SUB
+     * @param int $scope The scope to perform the search. Zend_Ldap::SEARCH_SCOPE_ONE, Zend_LDAP::SEARCH_SCOPE_BASE.
+     *                  Default is Zend_Ldap::SEARCH_SCOPE_SUB
      * @param array $attributes Restrict to specific AD attributes. An empty array will return all attributes
      * @return array
      */
@@ -170,7 +180,8 @@ class LDAPGateway
      *
      * @param string $dn
      * @param null|string $baseDn The DN to search from. Default is the baseDn option in the connection if not given
-     * @param int $scope The scope to perform the search. Zend_Ldap::SEARCH_SCOPE_ONE, Zend_LDAP::SEARCH_SCOPE_BASE. Default is Zend_Ldap::SEARCH_SCOPE_SUB
+     * @param int $scope The scope to perform the search. Zend_Ldap::SEARCH_SCOPE_ONE, Zend_LDAP::SEARCH_SCOPE_BASE.
+     *              Default is Zend_Ldap::SEARCH_SCOPE_SUB
      * @param array $attributes Restrict to specific AD attributes. An empty array will return all attributes
      * @return array
      */
@@ -188,12 +199,13 @@ class LDAPGateway
      * Query for LDAP users, but don't include built-in user accounts.
      *
      * @param null|string $baseDn The DN to search from. Default is the baseDn option in the connection if not given
-     * @param int $scope The scope to perform the search. Zend_Ldap::SEARCH_SCOPE_ONE, Zend_LDAP::SEARCH_SCOPE_BASE. Default is Zend_Ldap::SEARCH_SCOPE_SUB
+     * @param int $scope The scope to perform the search. Zend_Ldap::SEARCH_SCOPE_ONE, Zend_LDAP::SEARCH_SCOPE_BASE.
+     *                  Default is Zend_Ldap::SEARCH_SCOPE_SUB
      * @param array $attributes Restrict to specific AD attributes. An empty array will return all attributes
      * @param string $sort Sort results by this attribute if given
      * @return array
      */
-    public function getUsers($baseDn = null, $scope = Zend\Ldap\Ldap::SEARCH_SCOPE_SUB, $attributes = [], $sort = '')
+    public function getUsers($baseDn = null, $scope = Ldap::SEARCH_SCOPE_SUB, $attributes = [], $sort = '')
     {
         return $this->search(
             '(&(objectClass=user)(!(objectClass=computer))(!(samaccountname=Guest))(!(samaccountname=Administrator))(!(samaccountname=krbtgt)))',
@@ -225,7 +237,8 @@ class LDAPGateway
      *
      * @param string $dn
      * @param null|string $baseDn The DN to search from. Default is the baseDn option in the connection if not given
-     * @param int $scope The scope to perform the search. Zend_Ldap::SEARCH_SCOPE_ONE, Zend_LDAP::SEARCH_SCOPE_BASE. Default is Zend_Ldap::SEARCH_SCOPE_SUB
+     * @param int $scope The scope to perform the search. Zend_Ldap::SEARCH_SCOPE_ONE, Zend_LDAP::SEARCH_SCOPE_BASE.
+     *                  Default is Zend_Ldap::SEARCH_SCOPE_SUB
      * @param array $attributes Restrict to specific AD attributes. An empty array will return all attributes
      * @return array
      */
@@ -260,7 +273,8 @@ class LDAPGateway
      *
      * @param string $username
      * @param null|string $baseDn The DN to search from. Default is the baseDn option in the connection if not given
-     * @param int $scope The scope to perform the search. Zend_Ldap::SEARCH_SCOPE_ONE, Zend_LDAP::SEARCH_SCOPE_BASE. Default is Zend_Ldap::SEARCH_SCOPE_SUB
+     * @param int $scope The scope to perform the search. Zend_Ldap::SEARCH_SCOPE_ONE, Zend_LDAP::SEARCH_SCOPE_BASE.
+     *                      Default is Zend_Ldap::SEARCH_SCOPE_SUB
      * @param array $attributes Restrict to specific AD attributes. An empty array will return all attributes
      * @return array
      * @throws Exception
@@ -282,14 +296,20 @@ class LDAPGateway
                 throw new Exception('Backslash style not supported in LDAPGateway::getUserByUsername()!');
                 break;
             case Ldap::ACCTNAME_FORM_PRINCIPAL: // principal style usernames, e.g. alice@foo.com
-                $filter = sprintf('(&(objectClass=user)(userprincipalname=%s))', AbstractFilter::escapeValue($username));
+                $filter = sprintf(
+                    '(&(objectClass=user)(userprincipalname=%s))',
+                    AbstractFilter::escapeValue($username)
+                );
                 break;
             case Ldap::ACCTNAME_FORM_DN: // distinguished name, e.g. CN=someone,DC=example,DC=co,DC=nz
                 // @todo Not supported yet!
                 throw new Exception('DN style not supported in LDAPGateway::getUserByUsername()!');
                 break;
             default: // default to principal style
-                $filter = sprintf('(&(objectClass=user)(userprincipalname=%s))', AbstractFilter::escapeValue($username));
+                $filter = sprintf(
+                    '(&(objectClass=user)(userprincipalname=%s))',
+                    AbstractFilter::escapeValue($username)
+                );
                 break;
         }
 
@@ -307,7 +327,6 @@ class LDAPGateway
     {
         $options = $this->config()->options;
         $option = isset($options['accountCanonicalForm']) ? $options['accountCanonicalForm'] : null;
-
         switch ($option) {
             case Ldap::ACCTNAME_FORM_USERNAME: // traditional style usernames, e.g. alice
                 if (empty($data['samaccountname'])) {
@@ -391,7 +410,7 @@ class LDAPGateway
                 $dn,
                 ['unicodePwd' => iconv('UTF-8', 'UTF-16LE', sprintf('"%s"', $password))]
             );
-        } catch(LdapException $e) {
+        } catch (LdapException $e) {
             throw new Exception($this->getLastPasswordError());
         }
     }
@@ -461,7 +480,7 @@ class LDAPGateway
     private function getLastPasswordError()
     {
         $defaultError = _t(
-            'LDAPAuthenticator.CANTCHANGEPASSWORD',
+            'SilverStripe\\ActiveDirectory\\Authenticators\\LDAPAuthenticator.CANTCHANGEPASSWORD',
             'We couldn\'t change your password, please contact an administrator.'
         );
         $error = '';
