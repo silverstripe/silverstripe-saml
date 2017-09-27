@@ -1,0 +1,3 @@
+en:
+  SilverStripe\SAML\Authenticators\SAMLLoginForm:
+    AUTHENTICATORNAME: SAML
