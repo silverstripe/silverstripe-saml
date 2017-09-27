@@ -1,6 +1,6 @@
 <?php
 
-namespace SilverStripe\ActiveDirectory\Services;
+namespace SilverStripe\SAML\Services;
 
 use OneLogin_Saml2_Constants;
 use SilverStripe\Core\Injector\Injectable;

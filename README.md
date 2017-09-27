@@ -1,20 +1,20 @@
-# SilverStripe Active Directory module
+# SilverStripe SAML module
 
-[![Build Status](https://secure.travis-ci.org/silverstripe/silverstripe-activedirectory.svg)](https://travis-ci.org/silverstripe/silverstripe-activedirectory)
+[![Build Status](https://travis-ci.org/silverstripe/silverstripe-saml.svg)](https://travis-ci.org/silverstripe/silverstripe-saml)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/silverstripe/silverstripe-saml/badges/quality-score.png)](https://scrutinizer-ci.com/g/silverstripe/silverstripe-saml/)
+[![codecov](https://codecov.io/gh/silverstripe/silverstripe-saml/branch/master/graph/badge.svg)](https://codecov.io/gh/silverstripe/silverstripe-saml)
+
+# NOTE: Module is unstable and untested
 
 ## Introduction
 
-This SilverStripe module provides Active Directory integration. It comes with three major components:
+This SilverStripe module provides single sign-on authentication with SAML.
 
-* Single sign-on authentication with SAML
-* Synchronisation of Active Directory users and group memberships via LDAP
-* Active Directory authentication via LDAP binding
-
-These components may be used in any combination, also alongside the default SilverStripe authentication scheme.
+This component can also be used alongside the default SilverStripe authentication scheme.
 
 ## Requirements
 
- * PHP 5.5+ with extensions: ldap, openssl, dom, and mcrypt
+ * PHP 5.6+ with extensions: openssl, dom, and mcrypt
  * SilverStripe 4.0+
  * Active Directory on Windows Server 2008 R2 or greater (AD)
  * Active Directory Federation Services 2.0 or greater (ADFS)
@@ -42,10 +42,6 @@ The intended counterparty for this module is the [Active Directory Federation Se
 
 ADFS uses a claims-based access control authorization model to maintain application security and implement federated identity. We rely on this mechanism for authentication, and for automated synchronisation of some basic personal details into SilverStripe.
 
-To synchronise further personal details, LDAP synchronisation feature can be used, also included in this module. This allows arbitrary fields to be synchronised - including binary fields such as photos. If relevant mappings have been configured in the CMS the module will also automatically maintain SilverStripe group memberships, which opens the way for an AD-centric authorisation.
-
-If SAML authentication cannot be used, this module also provides an LDAP authenticator as an alternative.
-
 ## Security
 
 With appropriate configuration, this module provides a secure means of authentication and authorisation.
@@ -65,4 +61,4 @@ AD user synchronisation and authentication is hidden behind the backend (server 
 
 ## Changelog
 
-The changelog can be found at [CHANGELOG.MD](CHANGELOG.MD).
+Please see the GitHub releases for changes.

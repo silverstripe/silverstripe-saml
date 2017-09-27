@@ -1,6 +1,6 @@
 <?php
 
-namespace SilverStripe\ActiveDirectory\Extensions;
+namespace SilverStripe\SAML\Extensions;
 
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\ReadonlyField;

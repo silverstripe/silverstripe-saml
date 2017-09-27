@@ -85,7 +85,7 @@ Add the following configuration to `mysite/_config/saml.yml` (make sure to repla
     After:
       - "#samlsettings"
     ---
-    SilverStripe\ActiveDirectory\Services\SAMLConfiguration:
+    SilverStripe\SAML\Services\SAMLConfiguration:
       strict: true
       debug: false
       SP:
@@ -109,7 +109,7 @@ The signature algorithm must match the setting in the ADFS relying party trust
 configuration. For ADFS it's possible to downgrade the default from SHA-256 to
  SHA-1, but this is not recommended. To do this, you can change YAML configuration:
 
-    SilverStripe\ActiveDirectory\Services\SAMLConfiguration:
+    SilverStripe\SAML\Services\SAMLConfiguration:
       Security:
         signatureAlgorithm: "http://www.w3.org/2000/09/xmldsig#rsa-sha1"
 
@@ -145,7 +145,7 @@ SilverStripe\Core\Injector\Injector:
     SilverStripe\Security\Security:
       properties:
           Authenticators:
-            default: %$SilverStripe\ActiveDirectory\Authenticators\SAMLAuthenticator
+            default: %$SilverStripe\SAML\Authenticators\SAMLAuthenticator
 ```
 ### Show the LDAP Login button on login form
 ```yaml
@@ -153,7 +153,7 @@ SilverStripe\Core\Injector\Injector:
     SilverStripe\Security\Security:
       properties:
           Authenticators:
-            default: %$SilverStripe\ActiveDirectory\Authenticators\LDAPAuthenticator
+            default: %$SilverStripe\SAML\Authenticators\LDAPAuthenticator
 ```
 
 To prevent locking yourself out, before you remove the "MemberAuthenticator" make sure you map at least one LDAP group to the SilverStripe `Administrator` Security Group. Consult [CMS usage docs](usage.md) for how to do it.
@@ -198,7 +198,7 @@ These are the reasons for configuring LDAP synchronisation:
 
 Example configuration for `mysite/_config/ldap.yml`:
 
-    SilverStripe\ActiveDirectory\Model\LDAPGateway:
+    SilverStripe\SAML\Model\LDAPGateway:
       options:
         'host': 'ad.mydomain.local'
         'username': 'myusername'
@@ -218,7 +218,7 @@ For more information about available LDAP options, please [see the Zend\Ldap doc
 
 You can then set specific locations to search your directory. Note that these locations must be within the `baseDn` you have specified above:
 
-    SilverStripe\ActiveDirectory\Services\LDAPService:
+    SilverStripe\SAML\Services\LDAPService:
       users_search_locations:
         - 'CN=Users,DC=mydomain,DC=local'
         - 'CN=Others,DC=mydomain,DC=local'
@@ -241,7 +241,7 @@ You can visit a controller called `/LDAPDebug` to check that the connection is w
 You can configure the module so everyone imported goes into a default group. The group must already exist before
 you can use this setting. The value of this setting should be the "Code" field from the Group.
 
-    SilverStripe\ActiveDirectory\Services\LDAPService:
+    SilverStripe\SAML\Services\LDAPService:
       default_group: "content-authors"
 
 ### Map AD attributes to Member fields
@@ -314,13 +314,13 @@ You can schedule a job to run, then have it re-schedule itself so it runs again 
 If you want, you can set the behaviour of the sync to be destructive, which means any previously imported users who no
 longer exist in the directory get deleted:
 
-    SilverStripe\ActiveDirectory\Tasks\LDAPMemberSyncTask:
+    SilverStripe\SAML\Tasks\LDAPMemberSyncTask:
       destructive: true
 
-To configure when the job should re-run itself, set the `SilverStripe\ActiveDirectory\Jobs\LDAPMemberSyncJob.regenerate_time` configuration.
+To configure when the job should re-run itself, set the `SilverStripe\SAML\Jobs\LDAPMemberSyncJob.regenerate_time` configuration.
 In this example, this configures the job to run every 8 hours:
 
-    SilverStripe\ActiveDirectory\Jobs\LDAPMemberSyncJob:
+    SilverStripe\SAML\Jobs\LDAPMemberSyncJob:
       regenerate_time: 28800
 
 Once the job runs, it will enqueue itself again, so it's effectively run on a schedule. Keep in mind that you'll need to have `queuedjobs` setup on a cron so that it can automatically run those queued jobs.
@@ -336,12 +336,12 @@ Similarly to syncing AD users, you can also schedule a full group and user sync.
 
 As with the user sync, you can separately set the group sync to be destructive:
 
-    SilverStripe\ActiveDirectory\Tasks\LDAPGroupSyncTask:
+    SilverStripe\SAML\Tasks\LDAPGroupSyncTask:
       destructive: true
 
 And here is how you make the job reschedule itself after completion:
 
-    SilverStripe\ActiveDirectory\Jobs\LDAPAllSyncJob:
+    SilverStripe\SAML\Jobs\LDAPAllSyncJob:
       regenerate_time: 28800
 
 If you don't want to run a queued job, you can set a cronjob yourself by calling the two sync tasks (order is important, otherwise your group memberships might not get updated):
@@ -365,7 +365,7 @@ There are certain parts of his module that have debugging messages logged. You c
 
 To enable some very light weight debugging from the 3rd party library set the `debug` to true
 
-    SilverStripe\ActiveDirectory\Services\SAMLConfiguration:
+    SilverStripe\SAML\Services\SAMLConfiguration:
       debug: true
 
 In general it can be tricky to debug what is failing during the setup phase. The SAML protocol error
@@ -402,7 +402,7 @@ ldapsearch \
 
 It is possible to customize all the settings provided by the 3rd party SAML code.
 
-This can be done by registering your own `SilverStripe\ActiveDirectory\Services\SAMLConfiguration` object via `mysite/_config/saml.yml`:
+This can be done by registering your own `SilverStripe\SAML\Services\SAMLConfiguration` object via `mysite/_config/saml.yml`:
 
 Example:
 
@@ -444,7 +444,7 @@ using username instead of email. You can additionally allow people to authentica
 Example configuration in `mysite/_config/ldap.yml`:
 
 ```yaml
-SilverStripe\ActiveDirectory\Authenticators\LDAPAuthenticator:
+SilverStripe\SAML\Authenticators\LDAPAuthenticator:
   allow_email_login: 'yes'
 ```
 
@@ -458,7 +458,7 @@ This is different to registering multiple authenticators, in that the fallback w
 Example configuration in `mysite/_config/ldap.yml`:
 
 ```yaml
-SilverStripe\ActiveDirectory\Authenticators\LDAPAuthenticator:
+SilverStripe\SAML\Authenticators\LDAPAuthenticator:
   fallback_authenticator: 'yes'
 ```
 
@@ -482,7 +482,7 @@ This feature has only been tested on Microsoft AD compatible servers.
 Example configuration in `mysite/_config/ldap.yml`:
 
 ```yaml
-SilverStripe\ActiveDirectory\Services\LDAPService:
+SilverStripe\SAML\Services\LDAPService:
   allow_password_change: true
 ```
 
@@ -500,7 +500,7 @@ To turn on the feature, here is some example configuration in `mysite/_config/ld
 SilverStripe\Security\Member:
   update_ldap_from_local: true
   create_users_in_ldap: true
-SilverStripe\ActiveDirectory\Services\LDAPService:
+SilverStripe\SAML\Services\LDAPService:
   new_users_dn: CN=Users,DC=mydomain,DC=com
 ```
 

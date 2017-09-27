@@ -4,23 +4,23 @@ After: '#rootroutes'
 ---
 SilverStripe\Control\Director:
   rules:
-    'saml': SilverStripe\ActiveDirectory\Control\SAMLController
+    'saml': SilverStripe\SAML\Control\SAMLController
 
 SilverStripe\Security\Member:
   extensions:
-    - SilverStripe\ActiveDirectory\Extensions\SAMLMemberExtension
+    - SilverStripe\SAML\Extensions\SAMLMemberExtension
 
 SilverStripe\Security\Security:
   extensions:
-    - SilverStripe\ActiveDirectory\Authenticators\SAMLSecurityExtension
+    - SilverStripe\SAML\Authenticators\SAMLSecurityExtension
 
 SilverStripe\Core\Injector\Injector:
-  SAMLConfService: SilverStripe\ActiveDirectory\Services\SAMLConfiguration
+  SAMLConfService: SilverStripe\SAML\Services\SAMLConfiguration
 
-SilverStripe\ActiveDirectory\Authenticators\SAMLAuthenticator:
+SilverStripe\SAML\Authenticators\SAMLAuthenticator:
   name: "SAML"
 
-SilverStripe\ActiveDirectory\Services\SAMLConfiguration:
+SilverStripe\SAML\Services\SAMLConfiguration:
   strict: true
   debug: false
   Security:

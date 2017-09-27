@@ -1,6 +1,0 @@
----
-Name: activedirectorylegacy
----
-SilverStripe\ORM\DatabaseAdmin:
-  classname_value_remapping:
-    LDAPGroupMapping: SilverStripe\ActiveDirectory\Model\LDAPGroupMapping

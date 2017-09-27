@@ -1,6 +1,6 @@
 <?php
 
-namespace SilverStripe\ActiveDirectory\Authenticators;
+namespace SilverStripe\SAML\Authenticators;
 
 use SilverStripe\Control\Session;
 use SilverStripe\Core\Extension;
@@ -13,8 +13,6 @@ use SilverStripe\Security\Security;
  * Class SAMLSecurityExtension
  *
  * Extensions to the {@link Security} controller to support {@link SAMLAuthenticator}
- *
- * @package activedirectory
  */
 class SAMLSecurityExtension extends Extension
 {

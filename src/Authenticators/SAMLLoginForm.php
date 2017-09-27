@@ -1,6 +1,6 @@
 <?php
 
-namespace SilverStripe\ActiveDirectory\Authenticators;
+namespace SilverStripe\SAML\Authenticators;
 
 use SilverStripe\Control\RequestHandler;
 use SilverStripe\Forms\FieldList;
@@ -13,8 +13,6 @@ use SilverStripe\Security\Security;
  * Class SAMLLoginForm
  *
  * This not very interesting in itself. It's pretty much boiler-plate code to access the authenticator.
- *
- * @package activedirectory
  */
 class SAMLLoginForm extends LoginForm
 {

@@ -1,13 +1,12 @@
 <?php
 
-namespace SilverStripe\ActiveDirectory\Control;
+namespace SilverStripe\SAML\Control;
 
 use Exception;
 use OneLogin_Saml2_Error;
 use Psr\Log\LoggerInterface;
-use SilverStripe\ActiveDirectory\Authenticators\SAMLLoginForm;
-use SilverStripe\ActiveDirectory\Helpers\SAMLHelper;
-use SilverStripe\ActiveDirectory\Model\LDAPUtil;
+use SilverStripe\SAML\Authenticators\SAMLLoginForm;
+use SilverStripe\SAML\Helpers\SAMLHelper;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPResponse;
@@ -78,8 +77,9 @@ class SAMLController extends Controller
         }
 
         // transform the NameId to guid
-        $guid = LDAPUtil::bin_to_str_guid($decodedNameId);
-        if (!LDAPUtil::validGuid($guid)) {
+        $helper = SAMLHelper::singleton();
+        $guid = $helper->binToStrGuid($decodedNameId);
+        if (!$helper->validGuid($guid)) {
             $errorMessage = "Not a valid GUID '{$guid}' recieved from server.";
             $this->getLogger()->error($errorMessage);
             $this->getForm()->sessionMessage($errorMessage, 'bad');
@@ -133,7 +133,7 @@ class SAMLController extends Controller
     public function metadata()
     {
         try {
-            $auth = Injector::inst()->get('SilverStripe\\ActiveDirectory\\Helpers\\SAMLHelper')->getSAMLAuth();
+            $auth = Injector::inst()->get('SilverStripe\\SAML\\Helpers\\SAMLHelper')->getSAMLAuth();
             $settings = $auth->getSettings();
             $metadata = $settings->getSPMetadata();
             $errors = $settings->validateMetadata($metadata);

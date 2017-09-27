@@ -1,8 +1,7 @@
 <?php
 
-namespace SilverStripe\ActiveDirectory\Authenticators;
+namespace SilverStripe\SAML\Authenticators;
 
-use SilverStripe\ActiveDirectory\Helpers\SAMLHelper;
 use SilverStripe\Control\Controller;
 use Silverstripe\Control\Director;
 use SilverStripe\Control\HTTPRequest;
@@ -11,6 +10,7 @@ use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Forms\Form;
 use SilverStripe\ORM\ValidationResult;
+use SilverStripe\SAML\Helpers\SAMLHelper;
 use SilverStripe\Security\Authenticator;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\MemberAuthenticator\MemberAuthenticator;
@@ -28,8 +28,6 @@ use SilverStripe\Security\MemberAuthenticator\MemberAuthenticator;
  * - both, so people have multiple tabbed options in the login form.
  *
  * Both authenticators understand and collaborate through the GUID field on the Member.
- *
- * @package activedirectory
  */
 class SAMLAuthenticator extends MemberAuthenticator
 {

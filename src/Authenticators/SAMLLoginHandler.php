@@ -1,6 +1,6 @@
 <?php
 
-namespace SilverStripe\ActiveDirectory\Authenticators;
+namespace SilverStripe\SAML\Authenticators;
 
 use SilverStripe\Security\MemberAuthenticator\LoginHandler;
 
