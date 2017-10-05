@@ -2,12 +2,13 @@
 
 This guide will step you through the configuration steps needed to integrate with a SilverStripe site by getting ADFS to act as a SAML Identity Provider (IdP).
 
-As an ADFS administrator, after reading this guide, you should be able to provide federated authentication service to a SilverStripe site using *silverstripe-activedirectory* module.
+As an ADFS administrator, after reading this guide, you should be able to provide federated authentication service to a SilverStripe site using the *silverstripe-saml* module.
 
 ## Table of contents
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
 
 - [Overview](#overview)
 - [Make IdP certificate available](#make-idp-certificate-available)
@@ -27,7 +28,7 @@ This is not an exhaustive guide, and it only covers one operating system (Window
 As an implementor of the IdP, you will need to ensure the following have been set up:
 
 * Establishing bi-directional trust between SP and IdP
-* Adding a claim rule to send LDAP attributes
+* Adding a claim rule to send LDAP attributes (requires LDAP module)
 * Adding a claim rule to use "objectId" as "nameidentifier"
 * Ensuring compatible hash algorithm is used
 
@@ -37,7 +38,7 @@ If you are using a different version of AD or ADFS, this guide will hopefully gi
 
 SilverStripe site needs the IdP certificate to be able to establish the trust relationship.
 
-If you have access to the webserver, install the certificate at a known location and pass the path to the SilverStripe developer for configuration.
+If you have access to the web server, install the certificate at a known location and pass the path to the SilverStripe developer for configuration.
 
 You can get the certificate by either parsing it out from the endpoint `https://<idp-domain>/FederationMetadata/2007-06/FederationMetadata.xml`
 or by exporting the certificate manually using ADFS console on Windows.
@@ -76,7 +77,7 @@ Here you can add any notes, for example who would be the technical contact for t
 
 Claim rules decide what fields are used for performing authentication, and what is provided to the Service Provider as a context.
 
-Two claim rules are essential for *silverstripe-activedirectory* module to work. We will set these up now.
+Two claim rules are essential for *silverstripe-saml* module to work. We will set these up now.
 
 Right click the relying party and choose "Edit Claim Rules".
 
@@ -88,7 +89,7 @@ Right click the relying party and choose "Edit Claim Rules".
 
 This rule makes arbitrary AD attributes available for SAML authentication. We surface such parameters as "mail" for use as SilverStripe's email, "givenName" and "sn" for identifying the person, and "objectGuid" as a unique identifier.
 
-You could expand the list of fields provided, and the *silverstripe-activedirectory* module would be able to utilise these, but it's best to keep SAML payloads small. A better way to accomplish this is via LDAP integration - ask your SilverStripe developer to do that instead.
+You could expand the list of fields provided, and the *silverstripe-saml* module would be able to utilise these, but it's best to keep SAML payloads small. A better way to accomplish this is via [LDAP integration](https://github.com/silverstripe/silverstripe-ldap) - ask your SilverStripe developer to do that instead.
 
 Note that the "privatepersonalidentifier" must be a unique identifier (we will rely on it in "Rule 2"). Here we use "objectGuid".
 

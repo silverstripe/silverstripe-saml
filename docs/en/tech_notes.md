@@ -2,7 +2,7 @@
 
 ## Interface between SAML and LDAP
 
-The SAML and LDAP parts of this module interact only through the following two locations:
+The SAML and LDAP ([separate module](https://github.com/silverstripe/silverstripe-ldap)) components interact only through the following two locations:
 
 * `GUID` field on `Member`, added by both `SAMLMemberExtension` and `LDAPMemberExtension`.
 * `LDAPMemberExtension::memberLoggedIn` login hook, triggered after any login (including after
@@ -27,27 +27,15 @@ user.
 from LDAP, and LDAP group mappings are added.
 1. User is now authorised, since the group mappings are in place.
 
-## LDAP only sequence
-
-LDAP-only sequence:
-
-1. User requests a secured resource, and is redirected to `LDAPLoginForm`
-1. User fills in the credentials
-1. `LDAPAuthenticator::authenticate` is called
-1. Authentication against LDAP is performed by SilverStripe's backend.
-1. If `Member` record is not found, stub is created with some basic fields (i.e. GUID), but no group mapping.
-1. A login hook is triggered at `LDAPMemberExtension::memberLoggedIn`
-1. LDAP synchronisation is performed by looking up the GUID. All `Member` fields are overwritten with the data obtained
-from LDAP, and LDAP group mappings are added.
-1. User is logged into SilverStripe as that member, considered authenticated and authorised (since the group mappings
-are in place)
-
 ## Member record manipulation
 
-`Member` records are manipulated from multiple locations in this module. Members are identified by GUIDs by both LDAP
+`Member` records are manipulated from `SAMLAuthenticator::authenticate` in this module. Members are identified by GUIDs by both LDAP
 and SAML components.
 
 * `SAMLAuthenticator::authenticate`: creates stub `Member` after authorisation (if non-existent).
+
+Records are manipulated in multiple places in the LDAP module (if you have it installed):
+
 * `LDAPAuthenticator::authenticate`: creates stub `Member` after authorisation (if non-existent).
 * `LDAPMemberExtension::memberLoggedIn`: triggers LDAP synchronisation, rewriting all `Member` fields.
 * `LDAPMemberSyncTask::run`: pulls all LDAP records and creates relevant `Members`.

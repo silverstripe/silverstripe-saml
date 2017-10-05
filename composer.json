@@ -34,8 +34,11 @@
     "autoload": {
         "psr-4": {
             "SilverStripe\\SAML\\": "src/",
-            "SilverStripe\\SAML\\Tests\\": "tests/"
+            "SilverStripe\\SAML\\Tests\\": "tests/php/"
         }
+    },
+    "suggest": {
+        "silverstripe/ldap": "Synchronise extra user attributes from Active Directory with LDAP"
     },
     "minimum-stability": "dev",
     "prefer-stable": true
