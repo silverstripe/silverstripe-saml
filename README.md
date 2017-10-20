@@ -8,7 +8,7 @@
 
 ## Introduction
 
-This SilverStripe module provides single sign-on authentication with SAML.
+This SilverStripe module provides single sign-on authentication integration with a SAML provider.
 
 This component can also be used alongside the default SilverStripe authentication scheme.
 
@@ -16,18 +16,16 @@ This component can also be used alongside the default SilverStripe authenticatio
 
  * PHP 5.6+ with extensions: openssl, dom, and mcrypt
  * SilverStripe 4.0+
- * Active Directory on Windows Server 2008 R2 or greater (AD)
  * Active Directory Federation Services 2.0 or greater (ADFS)
  * HTTPS endpoint on SilverStripe site
  * HTTPS endpoint on ADFS
- * SSL/StartTLS encrypted LDAP endpoint on Active Directory
 
-This module has been tested on the following configurations:
+This module has prevoiously been tested on the following configurations, but is now untested:
 
  * Windows Server 2008 R2 with ADFS 2.0
  * Windows Server 2012 R2 with ADFS 3.0
 
-This module has not been tested on non-Microsoft directory products, such as OpenLDAP.
+**Note:** For LDAP only Active Directory integration, please see [silverstripe-ldap](https://github.com/silverstripe/silverstripe-ldap).
 
 ## Overview
 
@@ -41,6 +39,8 @@ With this module, SilverStripe site is able to act as a SAML Service Provider (S
 The intended counterparty for this module is the [Active Directory Federation Services (ADFS)](http://en.wikipedia.org/wiki/Active_Directory_Federation_Services). ADFS is a software component developed by Microsoft that can be installed on Windows Server operating systems to provide users with single sign-on access to systems and applications located across organizational boundaries.
 
 ADFS uses a claims-based access control authorization model to maintain application security and implement federated identity. We rely on this mechanism for authentication, and for automated synchronisation of some basic personal details into SilverStripe.
+
+SAML doesn't allow you to store additional user attributes. If this is desired, you can optionally install the [silverstripe-ldap](https://github.com/silverstripe/silverstripe-ldap) module and run alongside to synchronise custom user attributes from an Active Directory server.
 
 ## Security
 
@@ -56,9 +56,8 @@ AD user synchronisation and authentication is hidden behind the backend (server 
 
 * [Developer guide](docs/en/developer.md) - configure your SilverStripe site
 * [ADFS administrator guide](docs/en/adfs.md) - prepare the Identity Provider
-* [CMS usage guide](docs/en/usage.md) - manage LDAP group mappings
 * [Troubleshooting](docs/en/troubleshooting.md) - common problems
 
 ## Changelog
 
-Please see the GitHub releases for changes.
+Please see the [GitHub releases](https://github.com/silverstripe/silverstripe-saml/releases) for changes.
