@@ -4,6 +4,7 @@ namespace SilverStripe\SAML\Services;
 
 use OneLogin_Saml2_Constants;
 use SilverStripe\Core\Injector\Injectable;
+use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Control\Director;
 
 /**
@@ -22,6 +23,7 @@ use SilverStripe\Control\Director;
 class SAMLConfiguration
 {
     use Injectable;
+    use Configurable;
 
     /**
      * @var bool
