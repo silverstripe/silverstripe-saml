@@ -19,7 +19,7 @@ class SAMLHelper
     /**
      * @var array
      */
-    public static $dependencies = [
+    private static $dependencies = [
         'SAMLConfService' => '%$' . SAMLConfiguration::class,
     ];
 
