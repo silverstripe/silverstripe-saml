@@ -10,6 +10,7 @@ use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Forms\Form;
 use SilverStripe\ORM\ValidationResult;
+use SilverStripe\SAML\Control\SAMLController;
 use SilverStripe\SAML\Helpers\SAMLHelper;
 use SilverStripe\Security\Authenticator;
 use SilverStripe\Security\Member;
@@ -54,22 +55,19 @@ class SAMLAuthenticator extends MemberAuthenticator
     }
 
     /**
-     * Sends the authentication process down the SAML rabbit hole. It will trigger
-     * the IdP redirection via the 3rd party implementation, and if successful, the user
-     * will be delivered to the SAMLController::acs.
+     * This method does nothing, as all authentication via SAML is handled via HTTP redirects (similar to OAuth) which
+     * are not supported by the Authenticator system. Therefore, SAML authentication is only triggered when a user hits
+     * the SAMLController acs() endpoint when returning from the identity provider.
      *
      * @param array $data
      * @param HTTPRequest $request
      * @param ValidationResult|null $result
      * @return bool|Member|void
+     * @see SAMLController::acs()
      */
     public function authenticate(array $data, HTTPRequest $request, ValidationResult &$result = null)
     {
-        // $data is not used - the form is just one button, with no fields.
-        $auth = Injector::inst()->get(SAMLHelper::class)->getSAMLAuth();
-        $request->getSession()->set('BackURL', isset($data['BackURL']) ? $data['BackURL'] : null);
-        $request->getSession()->save($request);
-        $auth->login(Director::absoluteBaseURL().'saml/');
+        return null;
     }
 
     /**
