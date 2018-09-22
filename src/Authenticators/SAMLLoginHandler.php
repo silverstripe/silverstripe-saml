@@ -103,4 +103,24 @@ class SAMLLoginHandler extends RequestHandler
         $backURL = (isset($data['BackURL']) ? $data['BackURL'] : null);
         $this->helper->redirect($this, $request, $backURL);
     }
+
+    /**
+     * @return SAMLHelper
+     */
+    public function getHelper()
+    {
+        return $this->helper;
+    }
+
+    /**
+     * Sets the SAMLHelper that this login handler should use to redirect users to the IdP
+     *
+     * @param SAMLHelper $helper
+     * @return $this
+     */
+    public function setHelper(SAMLHelper $helper)
+    {
+        $this->helper = $helper;
+        return $this;
+    }
 }
