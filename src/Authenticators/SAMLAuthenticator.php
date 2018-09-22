@@ -12,6 +12,7 @@ use SilverStripe\Forms\Form;
 use SilverStripe\ORM\ValidationResult;
 use SilverStripe\SAML\Control\SAMLController;
 use SilverStripe\SAML\Helpers\SAMLHelper;
+use SilverStripe\SAML\Middleware\SAMLMiddleware;
 use SilverStripe\Security\Authenticator;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\MemberAuthenticator\MemberAuthenticator;
@@ -56,14 +57,18 @@ class SAMLAuthenticator extends MemberAuthenticator
 
     /**
      * This method does nothing, as all authentication via SAML is handled via HTTP redirects (similar to OAuth) which
-     * are not supported by the Authenticator system. Therefore, SAML authentication is only triggered when a user hits
-     * the SAMLController acs() endpoint when returning from the identity provider.
+     * are not supported by the Authenticator system. Authentication via SAML is only triggered when a user hits the
+     * SAMLController->acs() endpoint when returning from the identity provider.
+     *
+     * Instead of calling this method, you should use the SAMLLoginForm, or protect your entire site by enabling the
+     * SAMLMiddleware.
      *
      * @param array $data
      * @param HTTPRequest $request
      * @param ValidationResult|null $result
      * @return bool|Member|void
-     * @see SAMLController::acs()
+     * @see SAMLLoginForm
+     * @see SAMLMiddleware
      */
     public function authenticate(array $data, HTTPRequest $request, ValidationResult &$result = null)
     {
