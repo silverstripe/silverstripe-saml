@@ -71,7 +71,7 @@ You may also be able to extract the certificate yourself from the IdP endpoint i
 
 ## YAML configuration
 
-Now we need to make the *silverstripe-activedirectory* module aware of where the certificates can be found.
+Now we need to make the *silverstripe-saml* module aware of where the certificates can be found.
 
 Add the following configuration to `mysite/_config/saml.yml` (make sure to replace paths to the certificates and keys):
 
