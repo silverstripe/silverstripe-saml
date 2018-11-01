@@ -66,7 +66,7 @@ class SAMLAuthenticator extends MemberAuthenticator
      * @param array $data
      * @param HTTPRequest $request
      * @param ValidationResult|null $result
-     * @return bool|Member|void
+     * @return null
      * @see SAMLLoginForm
      * @see SAMLMiddleware
      */

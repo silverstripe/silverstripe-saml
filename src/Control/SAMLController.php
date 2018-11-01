@@ -72,7 +72,7 @@ class SAMLController extends Controller
         try {
             $auth->processResponse();
             $error = $auth->getLastErrorReason();
-        } catch(Exception $e) {
+        } catch (Exception $e) {
             $caughtException = $e;
         }
 
@@ -100,7 +100,8 @@ class SAMLController extends Controller
             $this->getForm()->sessionMessage(
                 _t(
                     'SilverStripe\\SAML\\Control\\SAMLController.ERR_SAML_ACS_FAILURE',
-                    'Unfortunately we couldn\'t log you in. If this continues, please contact your I.T. department with the following reference: {ref}',
+                    'Unfortunately we couldn\'t log you in. If this continues, please contact your I.T. department'
+                    . ' with the following reference: {ref}',
                     ['ref' => $id]
                 ),
                 ValidationResult::TYPE_ERROR
