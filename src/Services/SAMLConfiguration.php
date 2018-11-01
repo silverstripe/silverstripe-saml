@@ -46,6 +46,13 @@ class SAMLConfiguration
     private static $IdP;
 
     /**
+     * @var array List of valid AuthN contexts that the IdP can use to authenticate a user. Will be passed to the IdP in
+     * every AuthN request (e.g. every login attempt made by a user). The default values should work for ADFS 2.0, but
+     * can be overridden if needed.
+     */
+    private static $authn_contexts;
+
+    /**
      * @return array
      */
     public function asArray()
@@ -57,15 +64,13 @@ class SAMLConfiguration
 
         // SERVICE PROVIDER SECTION
         $sp = $this->config()->get('SP');
+
         $spCertPath = Director::is_absolute($sp['x509cert'])
             ? $sp['x509cert']
             : sprintf('%s/%s', BASE_PATH, $sp['x509cert']);
         $spKeyPath = Director::is_absolute($sp['privateKey'])
             ? $sp['privateKey']
             : sprintf('%s/%s', BASE_PATH, $sp['privateKey']);
-
-        // set baseurl for SAML messages coming back to the SP
-        $conf['baseurl'] = $sp['entityId'];
 
         $conf['sp']['entityId'] = $sp['entityId'];
         $conf['sp']['assertionConsumerService'] = [
@@ -99,6 +104,22 @@ class SAMLConfiguration
         // SECURITY SECTION
         $security = $this->config()->get('Security');
         $signatureAlgorithm = $security['signatureAlgorithm'];
+
+        $authnContexts = $this->config()->get('authn_contexts');
+        $disableAuthnContexts = $this->config()->get('disable_authn_contexts');
+
+        if ((bool)$disableAuthnContexts) {
+            $authnContexts = false;
+        } else {
+            if (!is_array($authnContexts)) {
+                // Fallback to default contexts if the supplied value isn't valid
+                $authnContexts = [
+                    'urn:federation:authentication:windows',
+                    'urn:oasis:names:tc:SAML:2.0:ac:classes:Password',
+                    'urn:oasis:names:tc:SAML:2.0:ac:classes:X509',
+                ];
+            }
+        }
 
         $conf['security'] = [
             /** signatures and encryptions offered */
@@ -137,11 +158,8 @@ class SAMLConfiguration
             // 'exact' 'urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport'
             // Set an array with the possible auth context values:
             // array ('urn:oasis:names:tc:SAML:2.0:ac:classes:Password', 'urn:oasis:names:tc:SAML:2.0:ac:classes:X509'),
-            'requestedAuthnContext' => [
-                'urn:federation:authentication:windows',
-                'urn:oasis:names:tc:SAML:2.0:ac:classes:Password',
-                'urn:oasis:names:tc:SAML:2.0:ac:classes:X509',
-            ],
+            'requestedAuthnContext' => $authnContexts,
+
             // Indicates if the SP will validate all received xmls.
             // (In order to validate the xml, 'strict' and 'wantXMLValidation' must be true).
             'wantXMLValidation' => true,

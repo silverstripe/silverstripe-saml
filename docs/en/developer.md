@@ -47,7 +47,7 @@ Commit the changes.
 
 ## Make x509 certificates available
 
-SAML uses pre-shared certificates for establishing trust between the Service Provider (SP - here, SilverStripe) the Identity Provider (IdP - here, ADFS).
+SAML uses pre-shared certificates for establishing trust between the Service Provider (SP - here, SilverStripe) and the Identity Provider (IdP - here, ADFS).
 
 ### SP certificate and key
 
@@ -96,7 +96,7 @@ SilverStripe\SAML\Services\SAMLConfiguration:
 
 If you don't use absolute paths, the certificate paths will be relative to the site web root.
 
-All IdP and SP endpoints must use HTTPS scheme with SSL certificates matching the domain names used.
+All IdP and SP endpoints must use HTTPS scheme with TLS/HTTPS certificates matching the domain names used.
 
 ### A note on signature algorithm config
 
@@ -148,48 +148,40 @@ SilverStripe\Core\Injector\Injector:
 
 **Note:** to prevent locking yourself out if using the LDAP module as well, before you remove the "MemberAuthenticator" make sure you map at least one LDAP group to the SilverStripe `Administrator` Security Group. Consult [CMS usage docs](usage.md) for how to do it.
 
-### Bypass auto login
+### Automatically require SAML login for every request
 
-If you register the SAMLAuthenticator as the default authenticator, it will automatically send users to the ADFS login server when they are required to login.
-Should you need to access the login form with all the configured Authenticators, go to:
+You can require that all users are logged in via SAML before any request to any page by enabling the `SAMLMiddleware` class. This will force a redirect if the user is not logged in, and the URL does not match a defined set of exclusions. The default list of exclusions includes all /Security URLs, so you should not use this middleware on its own to prevent users from using the normal login form. You should ensure that the default authenticator is the SAMLAuthenticator like so:
 
 ```yaml
-/Security/login?showloginform=1
+SilverStripe\Core\Injector\Injector:
+  SilverStripe\Security\Security:
+    properties:
+      authenticators:
+        default: %$SilverStripe\SAML\Authenticators\SAMLAuthenticator
 ```
 
-Note that if you have unregistered the `MemberAuthenticator`, and you wish to use that method during `showloginform=1`, you
-will need to set a cookie so it can be used temporarily.
+You can enable the middleware like so:
 
-This will set a cookie to show `MemberAuthenticator` if `showloginform=1` is requested:
-
-```php
-use SilverStripe\LDAP\Authenticators\LDAPAuthenticator;
-use SilverStripe\Control\Cookie;
-use SilverStripe\Core\Config\Config;
-use SilverStripe\Core\Injector\Injector;
-use SilverStripe\Security\Authenticator;
-use SilverStripe\Security\Security;
-
-if (isset($_GET['showloginform'])) {
-    Cookie::set('showloginform', (bool)$_GET['showloginform'], 1);
-}
-
-if (!Cookie::get('showloginform')) {
-    Config::modify()->merge(Authenticator::class, 'authenticators', [SAMLAuthenticator::class]);
-
-    Config::modify()->merge(Injector::class, Security::class, [
-        'properties' => [
-            'Authenticators' => [
-                'default' => '%$' . SAMLAuthenticator::class,
-            ]
-        ]
-    ]);
-}
+```yaml
+SilverStripe\Core\Injector\Injector:
+  SilverStripe\Control\Director:
+    properties:
+      Middlewares:
+        SAMLMiddleware: %$SilverStripe\SAML\Middleware\SAMLMiddleware
+SilverStripe\SAML\Middleware\SAMLMiddleware:
+  enabled: true
 ```
 
-If you do this, either clear your cookie or set the query string param back to 0 to return to using the LDAP login form.
+You can add any number of URLs that should **not** require automatic login via the `excluded_urls` config param using regex. By default, this includes any URL under `/Security` and `/saml`. These defaults should not be changed, but you can add additional exclusions:
 
-For more information see the [`SAMLSecurityExtension.php`](../../src/Authenticators/SAMLSecurityExtension.php).
+```yaml
+SilverStripe\SAML\Middleware\SAMLMiddleware:
+  excluded_urls:
+    - '/^MyUnauthenticatedController/i'
+    - '/^signup/'
+```
+
+Note: These are evaluated on every request, so keep your exclusion list as small as possible.
 
 ## Test the connection
 
@@ -250,6 +242,32 @@ for more information.
 Also ensure that all protocols are matching. SAML is very sensitive to differences in http and https in URIs.
 
 ## Advanced SAML configuration
+
+### Adjust the requested AuthN contexts
+
+By default, this module requests the following contexts (aka. 'ways users can login'):
+- `urn:federation:authentication:windows` (aka automatic Windows authentication)
+- `urn:oasis:names:tc:SAML:2.0:ac:classes:Password` (aka username and password, known as 'forms' authentication on the ADFS end)
+- `urn:oasis:names:tc:SAML:2.0:ac:classes:X509` (aka X.509 certificate)
+
+For more details on what options are possible for Microsoft ADFS, [check out MSDN](https://msdn.microsoft.com/en-us/library/hh599318.aspx).
+
+If you want to customise the requested options, you can do this via YML. For example, the below configuration ensures that only `windows` authentication is considered valid:
+
+```yaml
+---
+Name: samlconfig
+After:
+  - "#samlsettings"
+---
+SilverStripe\SAML\Services\SAMLConfiguration:
+  authn_contexts:
+    - 'urn:federation:authentication:windows'
+```
+
+You can also set `authn_contexts: false` which will disable the sending of AuthN contexts at all, allowing the remote IdP to make its best decision over what to use. This will also not require an exact match (and is therefore not recommended).
+
+### Create your own SAML configuration for completely custom settings
 
 It is possible to customize all the settings provided by the 3rd party SAML code.
 

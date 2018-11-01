@@ -1,7 +1,7 @@
 {
     "name": "silverstripe/saml",
     "description": "Adds SSO/SAML authentication support to SilverStripe",
-    "type": "silverstripe-module",
+    "type": "silverstripe-vendormodule",
     "keywords": ["silverstripe", "ad", "active", "directory", "sso", "saml"],
     "license": "BSD-3-Clause",
     "authors": [

@@ -10,10 +10,6 @@ SilverStripe\Security\Member:
   extensions:
     - SilverStripe\SAML\Extensions\SAMLMemberExtension
 
-SilverStripe\Security\Security:
-  extensions:
-    - SilverStripe\SAML\Authenticators\SAMLSecurityExtension
-
 SilverStripe\Core\Injector\Injector:
   SAMLConfService: SilverStripe\SAML\Services\SAMLConfiguration
 

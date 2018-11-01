@@ -2,7 +2,16 @@
 
 namespace SilverStripe\SAML\Helpers;
 
+use Exception;
+use Psr\Log\LoggerInterface;
+use SilverStripe\Control\Director;
+use SilverStripe\Control\HTTPRequest;
+use SilverStripe\Control\HTTPResponse_Exception;
+use SilverStripe\Control\RequestHandler;
 use SilverStripe\Core\Injector\Injectable;
+use SilverStripe\Core\Injector\Injector;
+use SilverStripe\SAML\Authenticators\SAMLLoginHandler;
+use SilverStripe\SAML\Control\SAMLController;
 use SilverStripe\SAML\Services\SAMLConfiguration;
 use OneLogin_Saml2_Auth;
 
@@ -35,6 +44,47 @@ class SAMLHelper
     {
         $samlConfig = $this->SAMLConfService->asArray();
         return new OneLogin_Saml2_Auth($samlConfig);
+    }
+
+    /**
+     * Create a SAML AuthN request and send the user off to the identity provider (IdP) to get authenticated. This
+     * method does not check to see if the user is already authenticated, that is the responsibility of the caller.
+     *
+     * Note: This method will *never* return via normal control flow - instead one of two things will happen:
+     * - The user will be forcefully & immediately redirected to the IdP to get authenticated, OR
+     * - A HTTPResponse_Exception is thrown because php-saml encountered an error while generating a valid AuthN request
+     *
+     * @param RequestHandler $requestHandler In case of error, we require a RequestHandler to throw errors from
+     * @param HTTPRequest $request The currently active request (used to retrieve session)
+     * @param string|null $backURL The URL to return to after successful SAML authentication (@see SAMLController)
+     * @throws HTTPResponse_Exception
+     * @see SAMLLoginHandler::doLogin() How the SAML login form handles this
+     * @see SAMLController::acs() How the response is processed after the user is returned from the IdP
+     * @return void This function will never return via normal control flow (see above).
+     */
+    public function redirect(RequestHandler $requestHandler = null, HTTPRequest $request = null, $backURL = null)
+    {
+        // $data is not used - the form is just one button, with no fields.
+        $auth = $this->getSAMLAuth();
+
+        if ($request) {
+            $request->getSession()->set('BackURL', $backURL);
+            $request->getSession()->save($request);
+        }
+
+        try {
+            $auth->login(Director::absoluteBaseURL().'saml/');
+        } catch (Exception $e) {
+            /** @var LoggerInterface $logger */
+            $logger = Injector::inst()->get(LoggerInterface::class);
+            $logger->error(sprintf('[code:%s] Error during SAMLHelper->redirect: %s', $e->getCode(), $e->getMessage()));
+
+            if ($requestHandler) {
+                $requestHandler->httpError(400);
+            } else {
+                throw new HTTPResponse_Exception(null, 400);
+            }
+        }
     }
 
     /**

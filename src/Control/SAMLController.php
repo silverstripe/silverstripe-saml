@@ -3,24 +3,28 @@
 namespace SilverStripe\SAML\Control;
 
 use Exception;
+use OneLogin_Saml2_Auth;
 use OneLogin_Saml2_Error;
+use OneLogin_Saml2_Utils;
 use Psr\Log\LoggerInterface;
+use SilverStripe\ORM\ValidationResult;
+use SilverStripe\SAML\Authenticators\SAMLAuthenticator;
 use SilverStripe\SAML\Authenticators\SAMLLoginForm;
 use SilverStripe\SAML\Helpers\SAMLHelper;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Security\IdentityStore;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Security;
+use function uniqid;
 
 /**
  * Class SAMLController
  *
- * This controller handles serving metadata requests for the IdP, as well as handling
- * creating new users and logging them into SilverStripe after being authenticated at the IdP.
- *
- * @package activedirectory
+ * This controller handles serving metadata requests for the identity provider (IdP), as well as handling the creation
+ * of new users and logging them into SilverStripe after being authenticated at the IdP.
  */
 class SAMLController extends Controller
 {
@@ -29,12 +33,14 @@ class SAMLController extends Controller
      */
     private static $allowed_actions = [
         'index',
-        'login',
-        'logout',
         'acs',
-        'sls',
         'metadata'
     ];
+
+    public function index()
+    {
+        return $this->redirect('/');
+    }
 
     /**
      * Assertion Consumer Service
@@ -47,31 +53,72 @@ class SAMLController extends Controller
      * LDAP side of this module to finish off loading Member data.
      *
      * @throws OneLogin_Saml2_Error
+     * @throws \Psr\Container\NotFoundExceptionInterface
      */
     public function acs()
     {
+        /** @var \OneLogin_Saml2_Auth $auth */
         $auth = Injector::inst()->get(SAMLHelper::class)->getSAMLAuth();
-        $auth->processResponse();
+        $caughtException = null;
 
-        $error = $auth->getLastErrorReason();
-        if (!empty($error)) {
-            $this->getLogger()->error($error);
+        // Force php-saml module to use the current absolute base URL (e.g. https://www.example.com/saml). This avoids
+        // errors that we otherwise get when having a multi-directory ACS URL like /saml/acs).
+        // See https://github.com/onelogin/php-saml/issues/249
+        OneLogin_Saml2_Utils::setBaseURL(Controller::join_links($auth->getSettings()->getSPData()['entityId'], 'saml'));
 
-            $this->getForm()->sessionMessage("Authentication error: '{$error}'", 'bad');
-            $this->getRequest()->getSession()->save($this->getRequest());
-            return $this->getRedirect();
+        // Attempt to process the SAML response. If there are errors during this, log them and redirect to the generic
+        // error page. Note: This does not necessarily include all SAML errors (e.g. we still need to confirm if the
+        // user is authenticated after this block
+        try {
+            $auth->processResponse();
+            $error = $auth->getLastErrorReason();
+        } catch (Exception $e) {
+            $caughtException = $e;
         }
 
-        if (!$auth->isAuthenticated()) {
-            $this->getForm()->sessionMessage(_t('SilverStripe\\Security\\Member.ERRORWRONGCRED'), 'bad');
+        // If there was an issue with the SAML response, if it was missing or if the SAML response indicates that they
+        // aren't authorised, then log the issue and provide a traceable error back to the user via the LoginForm
+        if ($caughtException || !empty($error) || !$auth->isAuthenticated()) {
+            // Log both errors (reported by php-saml and thrown as exception) with a common ID for later tracking
+            $id = uniqid('SAML-');
+
+            if ($caughtException instanceof Exception) {
+                $this->getLogger()->error(sprintf(
+                    '[%s] [code: %s] %s (%s:%s)',
+                    $id,
+                    $e->getCode(),
+                    $e->getMessage(),
+                    $e->getFile(),
+                    $e->getLine()
+                ));
+            }
+
+            if (!empty($error)) {
+                $this->getLogger()->error(sprintf('[%s] %s', $id, $error));
+            }
+
+            $this->getForm()->sessionMessage(
+                _t(
+                    'SilverStripe\\SAML\\Control\\SAMLController.ERR_SAML_ACS_FAILURE',
+                    'Unfortunately we couldn\'t log you in. If this continues, please contact your I.T. department'
+                    . ' with the following reference: {ref}',
+                    ['ref' => $id]
+                ),
+                ValidationResult::TYPE_ERROR
+            );
+
+            // Redirect the user back to the login form to display the generic error message and reference
             $this->getRequest()->getSession()->save($this->getRequest());
-            return $this->getRedirect();
+            return $this->redirect('Security/login');
         }
 
+        // If processing reaches here, then the user is authenticated - the rest of this method is just processing their
+        // legitimate information and configuring their account.
+
+        // Check that the NameID is a binary string (which signals that it is a guid
         $decodedNameId = base64_decode($auth->getNameId());
-        // check that the NameID is a binary string (which signals that it is a guid
         if (ctype_print($decodedNameId)) {
-            $this->getForm()->sessionMessage('Name ID provided by IdP is not a binary GUID.', 'bad');
+            $this->getForm()->sessionMessage('NameID from IdP is not a binary GUID.', ValidationResult::TYPE_ERROR);
             $this->getRequest()->getSession()->save($this->getRequest());
             return $this->getRedirect();
         }
@@ -82,7 +129,7 @@ class SAMLController extends Controller
         if (!$helper->validGuid($guid)) {
             $errorMessage = "Not a valid GUID '{$guid}' recieved from server.";
             $this->getLogger()->error($errorMessage);
-            $this->getForm()->sessionMessage($errorMessage, 'bad');
+            $this->getForm()->sessionMessage($errorMessage, ValidationResult::TYPE_ERROR);
             $this->getRequest()->getSession()->save($this->getRequest());
             return $this->getRedirect();
         }
@@ -115,12 +162,15 @@ class SAMLController extends Controller
 
         $member->SAMLSessionIndex = $auth->getSessionIndex();
 
-        // This will trigger LDAP update through LDAPMemberExtension::memberLoggedIn.
-        // The LDAP update will also write the Member record. We shouldn't write before
-        // calling this, as any onAfterWrite hooks that attempt to update LDAP won't
-        // have the Username field available yet for new Member records, and fail.
+        // This will trigger LDAP update through LDAPMemberExtension::memberLoggedIn. The LDAP update will also write
+        // the Member record a second time, but the member must be written before IdentityStore->logIn() is called.
         // Both SAML and LDAP identify Members by the GUID field.
-        Security::setCurrentUser($member);
+        $member->write();
+
+        /** @var IdentityStore $identityStore */
+        $identityStore = Injector::inst()->get(IdentityStore::class);
+        $persistent = Security::config()->get('autologin_enabled');
+        $identityStore->logIn($member, $persistent, $this->getRequest());
 
         return $this->getRedirect();
     }
@@ -133,7 +183,8 @@ class SAMLController extends Controller
     public function metadata()
     {
         try {
-            $auth = Injector::inst()->get('SilverStripe\\SAML\\Helpers\\SAMLHelper')->getSAMLAuth();
+            /** @var OneLogin_Saml2_Auth $auth */
+            $auth = Injector::inst()->get(SAMLHelper::class)->getSAMLAuth();
             $settings = $auth->getSettings();
             $metadata = $settings->getSPMetadata();
             $errors = $settings->validateMetadata($metadata);
@@ -195,6 +246,6 @@ class SAMLController extends Controller
      */
     public function getForm()
     {
-        return Injector::inst()->get(SAMLLoginForm::class);
+        return Injector::inst()->get(SAMLLoginForm::class, true, [$this, SAMLAuthenticator::class, 'LoginForm']);
     }
 }
