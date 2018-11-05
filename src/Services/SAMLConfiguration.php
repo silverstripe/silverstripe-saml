@@ -2,7 +2,7 @@
 
 namespace SilverStripe\SAML\Services;
 
-use OneLogin_Saml2_Constants;
+use OneLogin\Saml2\Constants;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Control\Director;
@@ -75,10 +75,10 @@ class SAMLConfiguration
         $conf['sp']['entityId'] = $sp['entityId'];
         $conf['sp']['assertionConsumerService'] = [
             'url' => $sp['entityId'] . '/saml/acs',
-            'binding' => OneLogin_Saml2_Constants::BINDING_HTTP_POST
+            'binding' => Constants::BINDING_HTTP_POST
         ];
         $conf['sp']['NameIDFormat'] = isset($sp['nameIdFormat']) ?
-            $sp['nameIdFormat'] : OneLogin_Saml2_Constants::NAMEID_TRANSIENT;
+            $sp['nameIdFormat'] : Constants::NAMEID_TRANSIENT;
         $conf['sp']['x509cert'] = file_get_contents($spCertPath);
         $conf['sp']['privateKey'] = file_get_contents($spKeyPath);
 
@@ -87,12 +87,12 @@ class SAMLConfiguration
         $conf['idp']['entityId'] = $idp['entityId'];
         $conf['idp']['singleSignOnService'] = [
             'url' => $idp['singleSignOnService'],
-            'binding' => OneLogin_Saml2_Constants::BINDING_HTTP_REDIRECT,
+            'binding' => Constants::BINDING_HTTP_REDIRECT,
         ];
         if (isset($idp['singleLogoutService'])) {
             $conf['idp']['singleLogoutService'] = [
                 'url' => $idp['singleLogoutService'],
-                'binding' => OneLogin_Saml2_Constants::BINDING_HTTP_REDIRECT,
+                'binding' => Constants::BINDING_HTTP_REDIRECT,
             ];
         }
 

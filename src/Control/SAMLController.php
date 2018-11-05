@@ -3,9 +3,8 @@
 namespace SilverStripe\SAML\Control;
 
 use Exception;
-use OneLogin_Saml2_Auth;
-use OneLogin_Saml2_Error;
-use OneLogin_Saml2_Utils;
+use OneLogin\Saml2\Auth;
+use OneLogin\Saml2\Utils;
 use Psr\Log\LoggerInterface;
 use SilverStripe\ORM\ValidationResult;
 use SilverStripe\SAML\Authenticators\SAMLAuthenticator;
@@ -52,19 +51,19 @@ class SAMLController extends Controller
      * if not existent), with the user already logged in. Login triggers memberLoggedIn hooks, which allows
      * LDAP side of this module to finish off loading Member data.
      *
-     * @throws OneLogin_Saml2_Error
+     * @throws OneLogin\Saml2\Error
      * @throws \Psr\Container\NotFoundExceptionInterface
      */
     public function acs()
     {
-        /** @var \OneLogin_Saml2_Auth $auth */
+        /** @var \OneLogin\Saml2\Auth $auth */
         $auth = Injector::inst()->get(SAMLHelper::class)->getSAMLAuth();
         $caughtException = null;
 
         // Force php-saml module to use the current absolute base URL (e.g. https://www.example.com/saml). This avoids
         // errors that we otherwise get when having a multi-directory ACS URL like /saml/acs).
         // See https://github.com/onelogin/php-saml/issues/249
-        OneLogin_Saml2_Utils::setBaseURL(Controller::join_links($auth->getSettings()->getSPData()['entityId'], 'saml'));
+        Utils::setBaseURL(Controller::join_links($auth->getSettings()->getSPData()['entityId'], 'saml'));
 
         // Attempt to process the SAML response. If there are errors during this, log them and redirect to the generic
         // error page. Note: This does not necessarily include all SAML errors (e.g. we still need to confirm if the
@@ -183,7 +182,7 @@ class SAMLController extends Controller
     public function metadata()
     {
         try {
-            /** @var OneLogin_Saml2_Auth $auth */
+            /** @var OneLogin\Saml2\Auth $auth */
             $auth = Injector::inst()->get(SAMLHelper::class)->getSAMLAuth();
             $settings = $auth->getSettings();
             $metadata = $settings->getSPMetadata();
@@ -192,9 +191,9 @@ class SAMLController extends Controller
                 header('Content-Type: text/xml');
                 echo $metadata;
             } else {
-                throw new \OneLogin_Saml2_Error(
+                throw new \OneLogin\Saml2\Error(
                     'Invalid SP metadata: ' . implode(', ', $errors),
-                    \OneLogin_Saml2_Error::METADATA_SP_INVALID
+                    \OneLogin\Saml2\Error::METADATA_SP_INVALID
                 );
             }
         } catch (Exception $e) {

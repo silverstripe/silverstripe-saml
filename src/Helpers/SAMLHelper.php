@@ -13,7 +13,7 @@ use SilverStripe\Core\Injector\Injector;
 use SilverStripe\SAML\Authenticators\SAMLLoginHandler;
 use SilverStripe\SAML\Control\SAMLController;
 use SilverStripe\SAML\Services\SAMLConfiguration;
-use OneLogin_Saml2_Auth;
+use OneLogin\Saml2\Auth;
 
 /**
  * Class SAMLHelper
@@ -38,12 +38,12 @@ class SAMLHelper
     public $SAMLConfService;
 
     /**
-     * @return OneLogin_Saml2_Auth
+     * @return OneLogin\Saml2\Auth
      */
     public function getSAMLauth()
     {
         $samlConfig = $this->SAMLConfService->asArray();
-        return new OneLogin_Saml2_Auth($samlConfig);
+        return new Auth($samlConfig);
     }
 
     /**
