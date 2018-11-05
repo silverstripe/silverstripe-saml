@@ -38,7 +38,7 @@ class SAMLHelper
     public $SAMLConfService;
 
     /**
-     * @return OneLogin\Saml2\Auth
+     * @return Auth
      */
     public function getSAMLauth()
     {

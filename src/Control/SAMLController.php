@@ -5,6 +5,7 @@ namespace SilverStripe\SAML\Control;
 use Exception;
 use OneLogin\Saml2\Auth;
 use OneLogin\Saml2\Utils;
+use OneLogin\Saml2\Error;
 use Psr\Log\LoggerInterface;
 use SilverStripe\ORM\ValidationResult;
 use SilverStripe\SAML\Authenticators\SAMLAuthenticator;
@@ -51,12 +52,12 @@ class SAMLController extends Controller
      * if not existent), with the user already logged in. Login triggers memberLoggedIn hooks, which allows
      * LDAP side of this module to finish off loading Member data.
      *
-     * @throws OneLogin\Saml2\Error
+     * @throws Error
      * @throws \Psr\Container\NotFoundExceptionInterface
      */
     public function acs()
     {
-        /** @var \OneLogin\Saml2\Auth $auth */
+        /** @var Auth $auth */
         $auth = Injector::inst()->get(SAMLHelper::class)->getSAMLAuth();
         $caughtException = null;
 
@@ -182,7 +183,7 @@ class SAMLController extends Controller
     public function metadata()
     {
         try {
-            /** @var OneLogin\Saml2\Auth $auth */
+            /** @var Auth $auth */
             $auth = Injector::inst()->get(SAMLHelper::class)->getSAMLAuth();
             $settings = $auth->getSettings();
             $metadata = $settings->getSPMetadata();
@@ -191,9 +192,9 @@ class SAMLController extends Controller
                 header('Content-Type: text/xml');
                 echo $metadata;
             } else {
-                throw new \OneLogin\Saml2\Error(
+                throw new Error(
                     'Invalid SP metadata: ' . implode(', ', $errors),
-                    \OneLogin\Saml2\Error::METADATA_SP_INVALID
+                    Error::METADATA_SP_INVALID
                 );
             }
         } catch (Exception $e) {
