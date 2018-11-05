@@ -4,8 +4,6 @@
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/silverstripe/silverstripe-saml/badges/quality-score.png)](https://scrutinizer-ci.com/g/silverstripe/silverstripe-saml/)
 [![codecov](https://codecov.io/gh/silverstripe/silverstripe-saml/branch/master/graph/badge.svg)](https://codecov.io/gh/silverstripe/silverstripe-saml)
 
-# NOTE: Module is unstable and untested
-
 ## Introduction
 
 This SilverStripe module provides single sign-on authentication integration with a SAML provider.
@@ -14,7 +12,7 @@ This component can also be used alongside the default SilverStripe authenticatio
 
 ## Requirements
 
- * PHP 5.6+ with extensions: openssl, dom, and mcrypt
+ * PHP 5.6+ with extensions: openssl, dom
  * SilverStripe 4.0+
  * Active Directory Federation Services 2.0 or greater (ADFS)
  * HTTPS endpoint on SilverStripe site
