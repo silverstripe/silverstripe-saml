@@ -65,7 +65,10 @@ Contact your system administrator if you are not sure how to install these.
 
 You also need to make the certificate for your ADFS endpoint available to the SilverStripe site. Talk with your ADFS administrator to find out how to obtain this.
 
-If you are managing ADFS yourself, consult the [ADFS administrator guide](adfs.md).
+* In you are integrating with ADFS, direct the ADFS administrator to the [ADFS administrator guide](adfs.md).
+* If you are integrating with Azure AD, direct the Azure AD administrator to the [Azure AD administrator guide](azure-ad.md).
+
+Note: For Azure AD, you will first need to decide on the Entity ID (see next step) so that you can provide this to the Azure AD administrator - they can't provide you the certificates until you provide them the Entity ID and Reply URL values.
 
 You may also be able to extract the certificate yourself from the IdP endpoint if it has already been configured: `https://<idp-domain>/FederationMetadata/2007-06/FederationMetadata.xml`.
 
@@ -73,11 +76,15 @@ You may also be able to extract the certificate yourself from the IdP endpoint i
 
 Now we need to make the *silverstripe-saml* module aware of where the certificates can be found.
 
-Add the following configuration to `mysite/_config/saml.yml` (make sure to replace paths to the certificates and keys):
+**Note:** If you are configuring this application for integration with Azure AD, a couple of extra keys need to be set. See the '[Additional configuration for Azure AD](#additional-configuration-for-azure-ad)' section below.
+
+Add the following configuration to `app/_config/saml.yml` (make sure to replace paths to the certificates and keys):
 
 ```yaml
+
 ---
 Name: mysamlsettings
+After: '#samlsettings'
 ---
 SilverStripe\SAML\Services\SAMLConfiguration:
   strict: true
@@ -92,6 +99,7 @@ SilverStripe\SAML\Services\SAMLConfiguration:
     singleSignOnService: "https://<idp-domain>/adfs/ls/"
   Security:
     signatureAlgorithm: "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"
+
 ```
 
 If you don't use absolute paths, the certificate paths will be relative to the site web root.
@@ -112,7 +120,7 @@ SilverStripe\SAML\Services\SAMLConfiguration:
 
 ### Service Provider (SP)
 
- - `entityId`: This should be the base URL with https for the SP
+ - `entityId`: This should be the base URL with https for the SP (e.g. https://example.com)
  - `privateKey`: The private key used for signing SAML request
  - `x509cert`: The public key that the IdP is using for verifying a signed request
 
@@ -122,13 +130,36 @@ SilverStripe\SAML\Services\SAMLConfiguration:
  - `x509cert`: The token-signing certificate from ADFS (base 64 encoded)
  - `singleSignOnService`: The endpoint on ADFS for where to send the SAML login request
 
+### Additional configuration for Azure AD
+
+When configuring the module to support Azure AD, a couple of additional configuration values need to be set to work with Azure AD out of the box. The below configuration should be merged into the YML configuration you have added above.
+
+```yaml
+SilverStripe\SAML\Services\SAMLConfiguration:
+  expect_binary_nameid: false
+  SP:
+    nameIdFormat: 'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified'
+
+SilverStripe\SAML\Extensions\SAMLMemberExtension:
+  claims_field_mappings:
+    - 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name': 'Email'
+```
+
 ## Establish trust
 
-At this stage the SilverStripe site trusts the ADFS, but the ADFS does not have any way to establish the identity of the SilverStripe site.
+At this stage the SilverStripe site trusts the IdP, but the IdP does not have any way to establish the identity of the SilverStripe site.
 
-ADFS should now be configured to extract the SP certificate from SilverStripe's SP endpoint. Once this is completed, bi-directional trust has been established and the authentication should be possible.
+The IdP should now be configured to extract the SP certificate from SilverStripe's SP endpoint. Once this is completed, bi-directional trust has been established and the authentication should be possible.
 
-*silverstripe-saml* has some specific requirements on how ADFS is configured. If you are managing ADFS yourself, or you are assisting an ADFS administrator, consult the [ADFS administrator guide](adfs.md).
+*silverstripe-saml* has some specific requirements on how ADFS, Azure AD and other IdPs are configured. Consult one of the following guides depending on the IdP you are integrating with.
+
+* [ADFS administrator guide](adfs.md)
+* [Azure AD administrator guide](azure-ad.md)
+
+In particular, most IdPs will require that you provide them with the entity ID and reply URLs (sometimes called the Assertion Consumer Service URL or ACS URL). These can be found by going to https://<site-domain>/saml/metadata once the above YML configuration is in place.
+
+* The Entity ID is the URL exactly as you have entered it in the YML above, which should be the URL to the root of your website (e.g. https://example.com)
+* The Reply URL is the Entity ID, with the suffix '/saml/acs' added to the end (e.g. https://example.com/saml/acs)
 
 ## Configure SilverStripe Authenticators
 

@@ -7,6 +7,7 @@ use OneLogin\Saml2\Auth;
 use OneLogin\Saml2\Utils;
 use OneLogin\Saml2\Error;
 use Psr\Log\LoggerInterface;
+use SilverStripe\Core\Config\Config;
 use SilverStripe\ORM\ValidationResult;
 use SilverStripe\SAML\Authenticators\SAMLAuthenticator;
 use SilverStripe\SAML\Authenticators\SAMLLoginForm;
@@ -15,6 +16,7 @@ use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\SAML\Services\SAMLConfiguration;
 use SilverStripe\Security\IdentityStore;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Security;
@@ -112,26 +114,33 @@ class SAMLController extends Controller
             return $this->redirect('Security/login');
         }
 
-        // If processing reaches here, then the user is authenticated - the rest of this method is just processing their
-        // legitimate information and configuring their account.
+        /**
+         * If processing reaches here, then the user is authenticated - the rest of this method is just processing their
+         * legitimate information and configuring their account.
+         */
 
-        // Check that the NameID is a binary string (which signals that it is a guid
-        $decodedNameId = base64_decode($auth->getNameId());
-        if (ctype_print($decodedNameId)) {
-            $this->getForm()->sessionMessage('NameID from IdP is not a binary GUID.', ValidationResult::TYPE_ERROR);
-            $this->getRequest()->getSession()->save($this->getRequest());
-            return $this->getRedirect();
-        }
+        // If we expect the NameID to be a binary version of the GUID (ADFS), check that it actually is
+        // If we are configured not to expect a binary NameID, then we assume it is a direct GUID (Azure AD)
+        if (Config::inst()->get(SAMLConfiguration::class, 'expect_binary_nameid')) {
+            $decodedNameId = base64_decode($auth->getNameId());
+            if (ctype_print($decodedNameId)) {
+                $this->getForm()->sessionMessage('NameID from IdP is not a binary GUID.', ValidationResult::TYPE_ERROR);
+                $this->getRequest()->getSession()->save($this->getRequest());
+                return $this->getRedirect();
+            }
 
-        // transform the NameId to guid
-        $helper = SAMLHelper::singleton();
-        $guid = $helper->binToStrGuid($decodedNameId);
-        if (!$helper->validGuid($guid)) {
-            $errorMessage = "Not a valid GUID '{$guid}' recieved from server.";
-            $this->getLogger()->error($errorMessage);
-            $this->getForm()->sessionMessage($errorMessage, ValidationResult::TYPE_ERROR);
-            $this->getRequest()->getSession()->save($this->getRequest());
-            return $this->getRedirect();
+            // transform the NameId to guid
+            $helper = SAMLHelper::singleton();
+            $guid = $helper->binToStrGuid($decodedNameId);
+            if (!$helper->validGuid($guid)) {
+                $errorMessage = "Not a valid GUID '{$guid}' recieved from server.";
+                $this->getLogger()->error($errorMessage);
+                $this->getForm()->sessionMessage($errorMessage, ValidationResult::TYPE_ERROR);
+                $this->getRequest()->getSession()->save($this->getRequest());
+                return $this->getRedirect();
+            }
+        } else {
+            $guid = $auth->getNameId();
         }
 
         // Write a rudimentary member with basic fields on every login, so that we at least have something

@@ -53,6 +53,15 @@ class SAMLConfiguration
     private static $authn_contexts;
 
     /**
+     * @config
+     * @var bool Whether or not we expect to receive a binary NameID from the IdP. We expect to receive a binary NameID 
+     * from ADFS, but don't expect it from Azure AD or most other SAML implementations that provide GUIDs.
+     *
+     * Defaults to true to preserve backwards compatibility (ADFS).
+     */
+    private static $expect_binary_nameid;
+
+    /**
      * @return array
      */
     public function asArray()

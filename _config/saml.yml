@@ -19,6 +19,7 @@ SilverStripe\SAML\Authenticators\SAMLAuthenticator:
 SilverStripe\SAML\Services\SAMLConfiguration:
   strict: true
   debug: false
+  expect_binary_nameid: true
   Security:
     # Algorithm that the toolkit will use on signing process. Options:
     #  - 'http://www.w3.org/2000/09/xmldsig#rsa-sha1'
