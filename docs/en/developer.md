@@ -274,6 +274,36 @@ Also ensure that all protocols are matching. SAML is very sensitive to differenc
 
 ## Advanced SAML configuration
 
+### Allow insecure linking-by-email
+
+Normally the SAML module looks for a `Member` record based only on the GUID returned by the IdP. However, this can break in some situations, particularly when you are retrofitting single-sign-on into an existing system that already has member records in the database. A common use-case is that the website is setup, with centralised SSO being added later. At that point, you already have members that are setup with standard email/password logins, and those email addresses are the same as the user's primary email in the IdP. When the SAML module searches for a user when they login via SSO for the first time, it won't find them based on GUID, and will throw an error because it will attempt to create a new member with the same email as an existing user.
+
+For this reason, the `allow_insecure_email_linking` YML config variable exists. During the transition period, you can enable this option so that if the lookup-by-GUID fails to find a valid member, the module will then attempt to lookup via the provided email address before falling back to creating a new member record.
+
+**Note: This is not recommended in production.** If this setting is enabled, then we fall back to relying on the non-unique email address to log in to an existing member's account. For example, consider the situation where John Smith previously had an email/password login to your website. They leave the company, and a new John Smith (unrelated to the website) inherits the email address when they join the company. If this option is enabled and the new John Smith attempts to login, despite them not being allowed access, we will set the user up and link them to the old accounts (and whatever permissions the old user had).
+
+We strongly recommend that you perform a full review of all users and permission levels for all members in the CMS **before you enable this setting** to ensure you will only create accounts for people that currently exist at the IdP.
+
+You can enable this setting with the following YML config:
+
+```yaml
+
+---
+Name: mysamlsettings
+After: '#samlsettings'
+---
+SilverStripe\SAML\Services\SAMLConfiguration:
+  allow_insecure_email_linking: true
+```
+
+**Note**: You will also need to specify a `SAMLMemberExtension.claims_field_mappings` claim map that sets a value for 'Email', so that the IdP provides a value to include in the email field, for example:
+
+```yaml
+SilverStripe\SAML\Extensions\SAMLMemberExtension:
+  claims_field_mappings:
+    - 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress': 'Email'
+```
+
 ### Adjust the requested AuthN contexts
 
 By default, this module requests the following contexts (aka. 'ways users can login'):

@@ -143,21 +143,29 @@ class SAMLController extends Controller
             $guid = $auth->getNameId();
         }
 
+        $attributes = $auth->getAttributes();
+
+        $fieldToClaimMap = array_flip(Member::config()->claims_field_mappings);
+
         // Write a rudimentary member with basic fields on every login, so that we at least have something
-        // if LDAP synchronisation fails.
+        // if there is no further sync (e.g. via LDAP)
         $member = Member::get()->filter('GUID', $guid)->limit(1)->first();
-        if (!($member && $member->exists())) {
-            $member = new Member();
+        if (!($member && $member->exists()) && Config::inst()->get(SAMLConfiguration::class, 'allow_insecure_email_linking') && isset($fieldToClaimMap['Email'])) {
+            // If there is no member found via GUID and we allow linking via email, search by email
+            $member = Member::get()->filter('Email', $attributes[$fieldToClaimMap['Email']])->limit(1)->first();
+
+            if (!($member && $member->exists())) {
+                $member = new Member();
+            }
+
             $member->GUID = $guid;
         }
-
-        $attributes = $auth->getAttributes();
 
         foreach ($member->config()->claims_field_mappings as $claim => $field) {
             if (!isset($attributes[$claim][0])) {
                 $this->getLogger()->warning(
                     sprintf(
-                        'Claim rule \'%s\' configured in LDAPMember.claims_field_mappings, ' .
+                        'Claim rule \'%s\' configured in SAMLMemberExtension.claims_field_mappings, ' .
                                 'but wasn\'t passed through. Please check IdP claim rules.',
                         $claim
                     )
