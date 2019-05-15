@@ -32,6 +32,7 @@ We assume ADFS 2.0 or greater is used as an IdP.
 - [Debugging](#debugging)
   - [SAML debugging](#saml-debugging)
 - [Advanced SAML configuration](#advanced-saml-configuration)
+  - [Allow insecure linking-by-email](#allow-insecure-linking-by-email)
   - [Adjust the requested AuthN contexts](#adjust-the-requested-authn-contexts)
   - [Create your own SAML configuration for completely custom settings](#create-your-own-saml-configuration-for-completely-custom-settings)
 - [Resources](#resources)
