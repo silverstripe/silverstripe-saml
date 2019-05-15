@@ -59,7 +59,7 @@ class SAMLConfiguration
      *
      * Defaults to true to preserve backwards compatibility (ADFS).
      */
-    private static $expect_binary_nameid;
+    private static $expect_binary_nameid = true;
 
     /**
      * @config
