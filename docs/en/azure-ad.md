@@ -1,3 +1,16 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+
+- [Azure AD administrator guide](#azure-ad-administrator-guide)
+  - [Table of contents](#table-of-contents)
+  - [Overview](#overview)
+  - [Creating a new Enterprise Application](#creating-a-new-enterprise-application)
+  - [FAQs](#faqs)
+    - [Why do we require using `objectId` instead of `userprincipalname`?](#why-do-we-require-using-objectid-instead-of-userprincipalname)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # Azure AD administrator guide
 
 This guide will step you through configuring a new SAML integration in Azure AD, such that Azure AD can act as an Identity Provider (IdP) for a SilverStripe site.

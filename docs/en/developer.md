@@ -20,10 +20,11 @@ We assume ADFS 2.0 or greater is used as an IdP.
   - [A note on signature algorithm config](#a-note-on-signature-algorithm-config)
   - [Service Provider (SP)](#service-provider-sp)
   - [Identity Provider (IdP)](#identity-provider-idp)
+  - [Additional configuration for Azure AD](#additional-configuration-for-azure-ad)
 - [Establish trust](#establish-trust)
 - [Configure SilverStripe Authenticators](#configure-silverstripe-authenticators)
   - [Show the SAML Login button on login form](#show-the-saml-login-button-on-login-form)
-  - [Bypass auto login](#bypass-auto-login)
+  - [Automatically require SAML login for every request](#automatically-require-saml-login-for-every-request)
 - [Test the connection](#test-the-connection)
 - [Configure LDAP synchronisation](#configure-ldap-synchronisation)
   - [Connect with LDAP](#connect-with-ldap)
@@ -31,6 +32,8 @@ We assume ADFS 2.0 or greater is used as an IdP.
 - [Debugging](#debugging)
   - [SAML debugging](#saml-debugging)
 - [Advanced SAML configuration](#advanced-saml-configuration)
+  - [Adjust the requested AuthN contexts](#adjust-the-requested-authn-contexts)
+  - [Create your own SAML configuration for completely custom settings](#create-your-own-saml-configuration-for-completely-custom-settings)
 - [Resources](#resources)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
