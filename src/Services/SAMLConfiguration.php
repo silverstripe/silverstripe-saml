@@ -69,7 +69,7 @@ class SAMLConfiguration
      *
      * Defaults to false to prevent looking up members based on email address.
      */
-    private static $allow_insecure_email_linking;
+    private static $allow_insecure_email_linking = false;
 
     /**
      * @return array

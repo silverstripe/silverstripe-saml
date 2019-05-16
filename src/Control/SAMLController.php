@@ -3,7 +3,9 @@
 namespace SilverStripe\SAML\Control;
 
 use Exception;
+use function gmmktime;
 use OneLogin\Saml2\Auth;
+use OneLogin\Saml2\Constants;
 use OneLogin\Saml2\Utils;
 use OneLogin\Saml2\Error;
 use Psr\Log\LoggerInterface;
@@ -16,6 +18,7 @@ use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\SAML\Model\SAMLResponse;
 use SilverStripe\SAML\Services\SAMLConfiguration;
 use SilverStripe\Security\IdentityStore;
 use SilverStripe\Security\Member;
@@ -63,6 +66,9 @@ class SAMLController extends Controller
         $auth = Injector::inst()->get(SAMLHelper::class)->getSAMLAuth();
         $caughtException = null;
 
+        // Log both errors (reported by php-saml and thrown as exception) with a common ID for later tracking
+        $uniqueErrorId = uniqid('SAML-');
+
         // Force php-saml module to use the current absolute base URL (e.g. https://www.example.com/saml). This avoids
         // errors that we otherwise get when having a multi-directory ACS URL like /saml/acs).
         // See https://github.com/onelogin/php-saml/issues/249
@@ -79,15 +85,17 @@ class SAMLController extends Controller
         }
 
         // If there was an issue with the SAML response, if it was missing or if the SAML response indicates that they
-        // aren't authorised, then log the issue and provide a traceable error back to the user via the LoginForm
-        if ($caughtException || !empty($error) || !$auth->isAuthenticated()) {
-            // Log both errors (reported by php-saml and thrown as exception) with a common ID for later tracking
-            $id = uniqid('SAML-');
-
+        // aren't authorised, then log the issue and provide a traceable error back to the user via the login form
+        if (
+            $caughtException ||
+            !empty($error) ||
+            !$auth->isAuthenticated() ||
+            $this->checkForReplayAttack($auth, $uniqueErrorId)
+        ) {
             if ($caughtException instanceof Exception) {
                 $this->getLogger()->error(sprintf(
                     '[%s] [code: %s] %s (%s:%s)',
-                    $id,
+                    $uniqueErrorId,
                     $e->getCode(),
                     $e->getMessage(),
                     $e->getFile(),
@@ -96,7 +104,7 @@ class SAMLController extends Controller
             }
 
             if (!empty($error)) {
-                $this->getLogger()->error(sprintf('[%s] %s', $id, $error));
+                $this->getLogger()->error(sprintf('[%s] %s', $uniqueErrorId, $error));
             }
 
             $this->getForm()->sessionMessage(
@@ -104,7 +112,7 @@ class SAMLController extends Controller
                     'SilverStripe\\SAML\\Control\\SAMLController.ERR_SAML_ACS_FAILURE',
                     'Unfortunately we couldn\'t log you in. If this continues, please contact your I.T. department'
                     . ' with the following reference: {ref}',
-                    ['ref' => $id]
+                    ['ref' => $uniqueErrorId]
                 ),
                 ValidationResult::TYPE_ERROR
             );
@@ -179,9 +187,10 @@ class SAMLController extends Controller
 
         $member->SAMLSessionIndex = $auth->getSessionIndex();
 
-        // This will trigger LDAP update through LDAPMemberExtension::memberLoggedIn. The LDAP update will also write
-        // the Member record a second time, but the member must be written before IdentityStore->logIn() is called.
-        // Both SAML and LDAP identify Members by the GUID field.
+        // This will trigger LDAP update through LDAPMemberExtension::memberLoggedIn, if the LDAP module is installed.
+        // The LDAP update will also write the Member record a second time, but the member *must* be written before
+        // IdentityStore->logIn() is called, otherwise the identity store throws an exception.
+        // Both SAML and LDAP identify Members by the same GUID field.
         $member->write();
 
         /** @var IdentityStore $identityStore */
@@ -244,6 +253,52 @@ class SAMLController extends Controller
 
         // fallback to redirect back to home page
         return $this->redirect(Director::absoluteBaseURL());
+    }
+
+    /**
+     * If processing reaches here, then the user is authenticated but potentially not valid. We first need to confirm
+     * that they are not an attacker performing a SAML replay attack (capturing the raw traffic from a compromised
+     * device and then re-submitting the same SAML response).
+     *
+     * To combat this, we store SAML response IDs for the amount of time they're valid for (plus a configurable offset
+     * to account for potential time skew), and if the ID has been seen before we log an error message and return true
+     * (which indicates that this specific request is a replay attack).
+     *
+     * If no replay attack is detected, then the SAML response is logged so that future requests can be blocked.
+     *
+     * @param Auth $auth The Auth object that includes the processed response
+     * @param string $uniqueErrorId The error code to use when logging error messages for this given error
+     * @return bool true if this response is a replay attack, false if it's the first time we've seen the ID
+     */
+    protected function checkForReplayAttack(Auth $auth, $uniqueErrorId = '')
+    {
+        $responseId = $auth->getLastMessageId();
+        $expiry = $auth->getLastAssertionNotOnOrAfter(); // Note: Expiry will always be stored and returned in UTC
+
+        // Search for any SAMLResponse objects where the response ID is the same and the expiry is within the range
+        $count = SAMLResponse::get()->filter(['ResponseID' => $responseId])->count();
+
+        if ($count > 0) {
+            // Response found, therefore this is a replay attack - log the error and return false so the user is denied
+            $this->getLogger()->error(sprintf(
+                '[%s] SAML replay attack detected! Response ID "%s", expires "%s", client IP "%s"',
+                $uniqueErrorId,
+                $responseId,
+                $expiry,
+                $this->getRequest()->getIP()
+            ));
+
+            return true;
+        } else {
+            // No attack detected, log the SAML response
+            $response = new SAMLResponse([
+                'ResponseID' => $responseId,
+                'Expiry' => $expiry
+            ]);
+
+            $response->write();
+            return false;
+        }
     }
 
     /**
