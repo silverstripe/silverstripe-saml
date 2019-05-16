@@ -167,6 +167,10 @@ class SAMLController extends Controller
             }
 
             $member->GUID = $guid;
+        } else if(!($member && $member->exists())) {
+            // If the member doesn't exist and we don't allow linking via email, then create a new member
+            $member = new Member();
+            $member->GUID = $guid;
         }
 
         foreach ($member->config()->claims_field_mappings as $claim => $field) {
