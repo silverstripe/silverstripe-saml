@@ -199,8 +199,7 @@ class SAMLController extends Controller
 
         /** @var IdentityStore $identityStore */
         $identityStore = Injector::inst()->get(IdentityStore::class);
-        $persistent = Security::config()->get('autologin_enabled');
-        $identityStore->logIn($member, $persistent, $this->getRequest());
+        $identityStore->logIn($member, false, $this->getRequest());
 
         return $this->getRedirect();
     }
