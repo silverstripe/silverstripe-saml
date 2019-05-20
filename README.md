@@ -15,6 +15,8 @@
 - [Overview](#overview)
 - [Security](#security)
 - [In-depth guides](#in-depth-guides)
+  - [For SilverStripe developers](#for-silverstripe-developers)
+  - [For identity provider administrators](#for-identity-provider-administrators)
 - [Changelog](#changelog)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -65,9 +67,16 @@ SilverStripe trusts ADFS responses based on pre-shared X509 certificates. These 
 
 ## In-depth guides
 
+### For SilverStripe developers
+
 * [Developer guide](docs/en/developer.md) - configure your SilverStripe site
-* [ADFS administrator guide](docs/en/adfs.md) - prepare the Identity Provider
 * [Troubleshooting](docs/en/troubleshooting.md) - common problems
+
+### For identity provider administrators
+
+These guides will help you prepare your identity provider and configure it to work with the module correctly.
+* [ADFS administrator guide](docs/en/adfs.md)
+* [Azure AD administrator guide](docs/en/azure-ad.md)
 
 ## Changelog
 
