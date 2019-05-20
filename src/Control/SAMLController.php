@@ -86,12 +86,8 @@ class SAMLController extends Controller
 
         // If there was an issue with the SAML response, if it was missing or if the SAML response indicates that they
         // aren't authorised, then log the issue and provide a traceable error back to the user via the login form
-        if (
-            $caughtException ||
-            !empty($error) ||
-            !$auth->isAuthenticated() ||
-            $this->checkForReplayAttack($auth, $uniqueErrorId)
-        ) {
+        $hasError = $caughtException || !empty($error);
+        if ($hasError || !$auth->isAuthenticated() || $this->checkForReplayAttack($auth, $uniqueErrorId)) {
             if ($caughtException instanceof Exception) {
                 $this->getLogger()->error(sprintf(
                     '[%s] [code: %s] %s (%s:%s)',
@@ -167,7 +163,7 @@ class SAMLController extends Controller
             }
 
             $member->GUID = $guid;
-        } else if(!($member && $member->exists())) {
+        } elseif (!($member && $member->exists())) {
             // If the member doesn't exist and we don't allow linking via email, then create a new member
             $member = new Member();
             $member->GUID = $guid;
