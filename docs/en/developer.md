@@ -20,10 +20,11 @@ We assume ADFS 2.0 or greater is used as an IdP.
   - [A note on signature algorithm config](#a-note-on-signature-algorithm-config)
   - [Service Provider (SP)](#service-provider-sp)
   - [Identity Provider (IdP)](#identity-provider-idp)
+  - [Additional configuration for Azure AD](#additional-configuration-for-azure-ad)
 - [Establish trust](#establish-trust)
 - [Configure SilverStripe Authenticators](#configure-silverstripe-authenticators)
   - [Show the SAML Login button on login form](#show-the-saml-login-button-on-login-form)
-  - [Bypass auto login](#bypass-auto-login)
+  - [Automatically require SAML login for every request](#automatically-require-saml-login-for-every-request)
 - [Test the connection](#test-the-connection)
 - [Configure LDAP synchronisation](#configure-ldap-synchronisation)
   - [Connect with LDAP](#connect-with-ldap)
@@ -31,6 +32,9 @@ We assume ADFS 2.0 or greater is used as an IdP.
 - [Debugging](#debugging)
   - [SAML debugging](#saml-debugging)
 - [Advanced SAML configuration](#advanced-saml-configuration)
+  - [Allow insecure linking-by-email](#allow-insecure-linking-by-email)
+  - [Adjust the requested AuthN contexts](#adjust-the-requested-authn-contexts)
+  - [Create your own SAML configuration for completely custom settings](#create-your-own-saml-configuration-for-completely-custom-settings)
 - [Resources](#resources)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -65,7 +69,10 @@ Contact your system administrator if you are not sure how to install these.
 
 You also need to make the certificate for your ADFS endpoint available to the SilverStripe site. Talk with your ADFS administrator to find out how to obtain this.
 
-If you are managing ADFS yourself, consult the [ADFS administrator guide](adfs.md).
+* In you are integrating with ADFS, direct the ADFS administrator to the [ADFS administrator guide](adfs.md).
+* If you are integrating with Azure AD, direct the Azure AD administrator to the [Azure AD administrator guide](azure-ad.md).
+
+Note: For Azure AD, you will first need to decide on the Entity ID (see next step) so that you can provide this to the Azure AD administrator - they can't provide you the certificates until you provide them the Entity ID and Reply URL values.
 
 You may also be able to extract the certificate yourself from the IdP endpoint if it has already been configured: `https://<idp-domain>/FederationMetadata/2007-06/FederationMetadata.xml`.
 
@@ -73,11 +80,15 @@ You may also be able to extract the certificate yourself from the IdP endpoint i
 
 Now we need to make the *silverstripe-saml* module aware of where the certificates can be found.
 
-Add the following configuration to `mysite/_config/saml.yml` (make sure to replace paths to the certificates and keys):
+**Note:** If you are configuring this application for integration with Azure AD, a couple of extra keys need to be set. See the '[Additional configuration for Azure AD](#additional-configuration-for-azure-ad)' section below.
+
+Add the following configuration to `app/_config/saml.yml` (make sure to replace paths to the certificates and keys):
 
 ```yaml
+
 ---
 Name: mysamlsettings
+After: '#samlsettings'
 ---
 SilverStripe\SAML\Services\SAMLConfiguration:
   strict: true
@@ -92,6 +103,7 @@ SilverStripe\SAML\Services\SAMLConfiguration:
     singleSignOnService: "https://<idp-domain>/adfs/ls/"
   Security:
     signatureAlgorithm: "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"
+
 ```
 
 If you don't use absolute paths, the certificate paths will be relative to the site web root.
@@ -112,7 +124,7 @@ SilverStripe\SAML\Services\SAMLConfiguration:
 
 ### Service Provider (SP)
 
- - `entityId`: This should be the base URL with https for the SP
+ - `entityId`: This should be the base URL with https for the SP (e.g. https://example.com)
  - `privateKey`: The private key used for signing SAML request
  - `x509cert`: The public key that the IdP is using for verifying a signed request
 
@@ -122,13 +134,36 @@ SilverStripe\SAML\Services\SAMLConfiguration:
  - `x509cert`: The token-signing certificate from ADFS (base 64 encoded)
  - `singleSignOnService`: The endpoint on ADFS for where to send the SAML login request
 
+### Additional configuration for Azure AD
+
+When configuring the module to support Azure AD, a couple of additional configuration values need to be set to work with Azure AD out of the box. The below configuration should be merged into the YML configuration you have added above.
+
+```yaml
+SilverStripe\SAML\Services\SAMLConfiguration:
+  expect_binary_nameid: false
+  SP:
+    nameIdFormat: 'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified'
+
+SilverStripe\SAML\Extensions\SAMLMemberExtension:
+  claims_field_mappings:
+    - 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name': 'Email'
+```
+
 ## Establish trust
 
-At this stage the SilverStripe site trusts the ADFS, but the ADFS does not have any way to establish the identity of the SilverStripe site.
+At this stage the SilverStripe site trusts the IdP, but the IdP does not have any way to establish the identity of the SilverStripe site.
 
-ADFS should now be configured to extract the SP certificate from SilverStripe's SP endpoint. Once this is completed, bi-directional trust has been established and the authentication should be possible.
+The IdP should now be configured to extract the SP certificate from SilverStripe's SP endpoint. Once this is completed, bi-directional trust has been established and the authentication should be possible.
 
-*silverstripe-saml* has some specific requirements on how ADFS is configured. If you are managing ADFS yourself, or you are assisting an ADFS administrator, consult the [ADFS administrator guide](adfs.md).
+*silverstripe-saml* has some specific requirements on how ADFS, Azure AD and other IdPs are configured. Consult one of the following guides depending on the IdP you are integrating with.
+
+* [ADFS administrator guide](adfs.md)
+* [Azure AD administrator guide](azure-ad.md)
+
+In particular, most IdPs will require that you provide them with the entity ID and reply URLs (sometimes called the Assertion Consumer Service URL or ACS URL). These can be found by going to https://<site-domain>/saml/metadata once the above YML configuration is in place.
+
+* The Entity ID is the URL exactly as you have entered it in the YML above, which should be the URL to the root of your website (e.g. https://example.com)
+* The Reply URL is the Entity ID, with the suffix '/saml/acs' added to the end (e.g. https://example.com/saml/acs)
 
 ## Configure SilverStripe Authenticators
 
@@ -242,6 +277,36 @@ for more information.
 Also ensure that all protocols are matching. SAML is very sensitive to differences in http and https in URIs.
 
 ## Advanced SAML configuration
+
+### Allow insecure linking-by-email
+
+Normally the SAML module looks for a `Member` record based only on the GUID returned by the IdP. However, this can break in some situations, particularly when you are retrofitting single-sign-on into an existing system that already has member records in the database. A common use-case is that the website is setup, with centralised SSO being added later. At that point, you already have members that are setup with standard email/password logins, and those email addresses are the same as the user's primary email in the IdP. When the SAML module searches for a user when they login via SSO for the first time, it won't find them based on GUID, and will throw an error because it will attempt to create a new member with the same email as an existing user.
+
+For this reason, the `allow_insecure_email_linking` YML config variable exists. During the transition period, you can enable this option so that if the lookup-by-GUID fails to find a valid member, the module will then attempt to lookup via the provided email address before falling back to creating a new member record.
+
+**Note: This is not recommended in production.** If this setting is enabled, then we fall back to relying on the non-unique email address to log in to an existing member's account. For example, consider the situation where John Smith previously had an email/password login to your website. They leave the company, and a new John Smith (unrelated to the website) inherits the email address when they join the company. If this option is enabled and the new John Smith attempts to login, despite them not being allowed access, we will set the user up and link them to the old accounts (and whatever permissions the old user had).
+
+We strongly recommend that you perform a full review of all users and permission levels for all members in the CMS **before you enable this setting** to ensure you will only create accounts for people that currently exist at the IdP.
+
+You can enable this setting with the following YML config:
+
+```yaml
+
+---
+Name: mysamlsettings
+After: '#samlsettings'
+---
+SilverStripe\SAML\Services\SAMLConfiguration:
+  allow_insecure_email_linking: true
+```
+
+**Note**: You will also need to specify a `SAMLMemberExtension.claims_field_mappings` claim map that sets a value for 'Email', so that the IdP provides a value to include in the email field, for example:
+
+```yaml
+SilverStripe\SAML\Extensions\SAMLMemberExtension:
+  claims_field_mappings:
+    - 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress': 'Email'
+```
 
 ### Adjust the requested AuthN contexts
 

@@ -1,3 +1,14 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+
+- [Technical notes](#technical-notes)
+  - [Interface between SAML and LDAP](#interface-between-saml-and-ldap)
+  - [SAML+LDAP sequence](#samlldap-sequence)
+  - [Member record manipulation](#member-record-manipulation)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # Technical notes
 
 ## Interface between SAML and LDAP
