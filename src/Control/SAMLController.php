@@ -141,12 +141,14 @@ class SAMLController extends Controller
         }
 
         if (!$helper->validGuid($guid)) {
-            $errorMessage = "Not a valid GUID '{$guid}' recieved from server.";
+            $errorMessage = "Not a valid GUID '{$guid}' received from server.";
             $this->getLogger()->error($errorMessage);
             $this->getForm()->sessionMessage($errorMessage, ValidationResult::TYPE_ERROR);
             $this->getRequest()->getSession()->save($this->getRequest());
             return $this->getRedirect();
         }
+
+        $this->extend('updateGuid', $guid);
 
         $attributes = $auth->getAttributes();
 
