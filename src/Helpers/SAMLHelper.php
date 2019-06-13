@@ -89,13 +89,14 @@ class SAMLHelper
 
     /**
      * Checks if the string is a valid guid in the format of A98C5A1E-A742-4808-96FA-6F409E799937
+     * Case in-sensitive
      *
      * @param  string $guid
      * @return bool
      */
     public function validGuid($guid)
     {
-        if (preg_match('/^[A-F0-9]{8}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{12}?$/', $guid)) {
+        if (preg_match('/^[A-F0-9]{8}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{12}?$/i', $guid)) {
             return true;
         }
         return false;
