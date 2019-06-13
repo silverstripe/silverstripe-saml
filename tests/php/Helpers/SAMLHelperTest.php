@@ -25,7 +25,7 @@ class SAMLHelperTest extends SapphireTest
     {
         return [
             ['A98C5A1E-A742-4808-96FA-6F409E799937', true],
-            ['A98C5A1E-1234-5678-9876-ABCDEFGHJIJK', true],
+            ['A98C5A1E-1234-5678-9876-ABCDEFGHJIJK', false],
             ['A98C5A1E-1234-56!8-9876-A#CDEFGHJIJK', false],
             ['A98C5A1E-4808-96FA-6F409E799937', false],
             ['foobar', false],
