@@ -136,15 +136,16 @@ class SAMLController extends Controller
             // transform the NameId to guid
             $helper = SAMLHelper::singleton();
             $guid = $helper->binToStrGuid($decodedNameId);
-            if (!$helper->validGuid($guid)) {
-                $errorMessage = "Not a valid GUID '{$guid}' recieved from server.";
-                $this->getLogger()->error($errorMessage);
-                $this->getForm()->sessionMessage($errorMessage, ValidationResult::TYPE_ERROR);
-                $this->getRequest()->getSession()->save($this->getRequest());
-                return $this->getRedirect();
-            }
         } else {
             $guid = $auth->getNameId();
+        }
+
+        if (!$helper->validGuid($guid)) {
+            $errorMessage = "Not a valid GUID '{$guid}' recieved from server.";
+            $this->getLogger()->error($errorMessage);
+            $this->getForm()->sessionMessage($errorMessage, ValidationResult::TYPE_ERROR);
+            $this->getRequest()->getSession()->save($this->getRequest());
+            return $this->getRedirect();
         }
 
         $attributes = $auth->getAttributes();
