@@ -73,7 +73,7 @@ class SAMLHelper
         }
 
         try {
-            $auth->login(Director::absoluteBaseURL().'saml/');
+            $auth->login(Director::absoluteBaseURL() . 'saml/');
         } catch (Exception $e) {
             /** @var LoggerInterface $logger */
             $logger = Injector::inst()->get(LoggerInterface::class);

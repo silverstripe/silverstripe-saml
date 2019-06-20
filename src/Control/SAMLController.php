@@ -155,7 +155,10 @@ class SAMLController extends Controller
         // Write a rudimentary member with basic fields on every login, so that we at least have something
         // if there is no further sync (e.g. via LDAP)
         $member = Member::get()->filter('GUID', $guid)->limit(1)->first();
-        if (!($member && $member->exists()) && Config::inst()->get(SAMLConfiguration::class, 'allow_insecure_email_linking') && isset($fieldToClaimMap['Email'])) {
+        if (!($member && $member->exists())
+            && Config::inst()->get(SAMLConfiguration::class, 'allow_insecure_email_linking')
+            && isset($fieldToClaimMap['Email'])
+        ) {
             // If there is no member found via GUID and we allow linking via email, search by email
             $member = Member::get()->filter('Email', $attributes[$fieldToClaimMap['Email']])->limit(1)->first();
 
