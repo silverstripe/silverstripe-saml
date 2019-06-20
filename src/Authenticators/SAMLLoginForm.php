@@ -42,7 +42,7 @@ class SAMLLoginForm extends LoginForm
      * Constructor
      *
      * @param RequestHandler $controller
-     * @param string $authenticatorClass
+     * @param string $authenticatorClass @deprecated this argument is not used, can be removed in next major release
      * @param string $name method on the $controller
      */
     public function __construct(RequestHandler $controller, $authenticatorClass, $name)

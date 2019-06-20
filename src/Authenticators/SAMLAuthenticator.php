@@ -52,7 +52,7 @@ class SAMLAuthenticator extends MemberAuthenticator
      */
     public static function get_login_form(Controller $controller)
     {
-        return new SAMLLoginForm($controller, 'LoginForm');
+        return new SAMLLoginForm($controller, self::class, 'LoginForm');
     }
 
     /**
