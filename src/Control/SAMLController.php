@@ -123,6 +123,8 @@ class SAMLController extends Controller
          * legitimate information and configuring their account.
          */
 
+        $helper = SAMLHelper::singleton();
+
         // If we expect the NameID to be a binary version of the GUID (ADFS), check that it actually is
         // If we are configured not to expect a binary NameID, then we assume it is a direct GUID (Azure AD)
         if (Config::inst()->get(SAMLConfiguration::class, 'expect_binary_nameid')) {
@@ -134,7 +136,6 @@ class SAMLController extends Controller
             }
 
             // transform the NameId to guid
-            $helper = SAMLHelper::singleton();
             $guid = $helper->binToStrGuid($decodedNameId);
         } else {
             $guid = $auth->getNameId();
