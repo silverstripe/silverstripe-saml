@@ -21,6 +21,7 @@ We assume ADFS 2.0 or greater is used as an IdP.
   - [Service Provider (SP)](#service-provider-sp)
   - [Identity Provider (IdP)](#identity-provider-idp)
   - [Additional configuration for Azure AD](#additional-configuration-for-azure-ad)
+  - [GUID Transformation](#guid-transformation)
 - [Establish trust](#establish-trust)
 - [Configure SilverStripe Authenticators](#configure-silverstripe-authenticators)
   - [Show the SAML Login button on login form](#show-the-saml-login-button-on-login-form)
@@ -148,6 +149,11 @@ SilverStripe\SAML\Extensions\SAMLMemberExtension:
   claims_field_mappings:
     - 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name': 'Email'
 ```
+
+### GUID Transformation
+
+If you prefer to receive the GUID in lower-case or upper-case format you can use the 
+`updateGuid()` extension point on `\SilverStripe\SAML\Control\SAMLController`.
 
 ## Establish trust
 
