@@ -326,6 +326,7 @@ For more details on what options are possible for Microsoft ADFS, [check out MSD
 If you want to customise the requested options, you can do this via YML. For example, the below configuration ensures that only `windows` authentication is considered valid:
 
 ```yaml
+
 ---
 Name: samlconfig
 After:
@@ -336,7 +337,7 @@ SilverStripe\SAML\Services\SAMLConfiguration:
     - 'urn:federation:authentication:windows'
 ```
 
-You can also set `authn_contexts: false` which will disable the sending of AuthN contexts at all, allowing the remote IdP to make its best decision over what to use. This will also not require an exact match (and is therefore not recommended).
+You can also set `disable_authn_contexts: true` which will disable the sending of AuthN contexts at all, allowing the remote IdP to make its best decision over what to use. This will also not require an exact match (and is therefore not recommended).
 
 ### Create your own SAML configuration for completely custom settings
 
@@ -347,6 +348,7 @@ This can be done by registering your own `SilverStripe\SAML\Services\SAMLConfigu
 Example:
 
 ```yaml
+
 ---
 Name: samlconfig
 After:
