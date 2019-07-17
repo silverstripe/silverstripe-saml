@@ -36,6 +36,7 @@ We assume ADFS 2.0 or greater is used as an IdP.
   - [Allow insecure linking-by-email](#allow-insecure-linking-by-email)
   - [Adjust the requested AuthN contexts](#adjust-the-requested-authn-contexts)
   - [Create your own SAML configuration for completely custom settings](#create-your-own-saml-configuration-for-completely-custom-settings)
+  - [Additional GET Query Params for SAML](#additional-get-query-params-for-saml)
 - [Resources](#resources)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -378,6 +379,18 @@ class MySAMLConfiguration
 
 See the [advanced\_settings/\_example.php](https://github.com/onelogin/php-saml/blob/master/advanced_settings_example.php)
 for the advanced settings.
+
+### Additional GET Query Params for SAML
+example:
+```yaml
+SilverStripe\SAML\Services\SAMLConfiguration:
+  additional_get_query_params:
+    someGetQueryParameter: 'value'
+    AnotherParameter: 'differentValue'
+```
+
+this configuration allows you to add two GET query parameters to endpoint request URL:
+`https://your-idp.com/singleSignOnService/saml2?someGetQueryParameter=value&AnotherParameter=differentValue&SAMLRequest=XYZ....`
 
 ## Resources
 
