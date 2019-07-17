@@ -85,6 +85,14 @@ class SAMLConfiguration
     private static $expose_guid_as_attribute = false;
 
     /**
+     * @config
+     * @example ['GET Query Parameter Name' => 'Parameter Value', ... ]
+     *
+     * @var string[]
+     */
+    private static $additional_get_query_params = [];
+
+    /**
      * @return array
      */
     public function asArray()
