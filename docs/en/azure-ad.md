@@ -35,7 +35,7 @@ As an implementor of the IdP, you need to ensure the following have been set up:
 5. Once the application is created, select 'Single sign-on' from the left-menu, then select 'SAML'
 6. Either upload the metadata file provided by the site developers, or enter the Entity ID and Reply URLs provided by the developers. These should always have the same base hostname, with the Reply URL including '/saml/acs' at the end
 7. Under 'User Attributes', select `user.objectId` as the User Identifier, instead of the default (`user.userprincipalname`)
-8. Provide the 'App Federation Metadata Url' and the base64 copy of the certificate under section 4 to the site developers
+8. Provide the 'App Federation Metadata Url' and the base64 copy of the certificate under section 3 to the site developers
 
 Once the site developers have deployed the certificates and login URLs, the configuration should be set up and ready to be tested. You will need to configure users or groups that have access to this application before Azure AD will pass them through to the website, you can do this from the 'Users and groups' sidebar menu.
 
