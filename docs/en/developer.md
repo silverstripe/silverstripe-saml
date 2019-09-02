@@ -147,7 +147,7 @@ SilverStripe\SAML\Services\SAMLConfiguration:
 
 SilverStripe\SAML\Extensions\SAMLMemberExtension:
   claims_field_mappings:
-    - 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name': 'Email'
+    'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name': 'Email'
 ```
 
 ### GUID Transformation
