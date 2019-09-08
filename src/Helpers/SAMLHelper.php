@@ -72,8 +72,10 @@ class SAMLHelper
             $request->getSession()->save($request);
         }
 
+        $additionalGetQueryParams = $this->getAdditionalGETQueryParameters();
+
         try {
-            $auth->login(Director::absoluteBaseURL() . 'saml/');
+            $auth->login(Director::absoluteBaseURL() . 'saml/', $additionalGetQueryParams);
         } catch (Exception $e) {
             /** @var LoggerInterface $logger */
             $logger = Injector::inst()->get(LoggerInterface::class);
@@ -124,5 +126,18 @@ class SAMLHelper
         $hex_guid_to_guid_str .= '-' . substr($hex_guid, 16, 4);
         $hex_guid_to_guid_str .= '-' . substr($hex_guid, 20);
         return strtoupper($hex_guid_to_guid_str);
+    }
+
+    /**
+     * @return string[]
+     */
+    private function getAdditionalGETQueryParameters()
+    {
+        $additionalGetQueryParams = $this->SAMLConfService->config()->get('additional_get_query_params');
+        if (!is_array($additionalGetQueryParams)) {
+            $additionalGetQueryParams = [];
+        }
+
+        return $additionalGetQueryParams;
     }
 }

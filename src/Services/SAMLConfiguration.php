@@ -72,6 +72,14 @@ class SAMLConfiguration
     private static $allow_insecure_email_linking = false;
 
     /**
+     * @config
+     * @example ['GET Query Parameter Name' => 'Parameter Value', ... ]
+     *
+     * @var string[]
+     */
+    private static $additional_get_query_params = [];
+
+    /**
      * @return array
      */
     public function asArray()
