@@ -3,7 +3,9 @@
 namespace SilverStripe\SAML\Control;
 
 use Exception;
+
 use function gmmktime;
+
 use OneLogin\Saml2\Auth;
 use OneLogin\Saml2\Constants;
 use OneLogin\Saml2\Utils;
@@ -23,6 +25,7 @@ use SilverStripe\SAML\Services\SAMLConfiguration;
 use SilverStripe\Security\IdentityStore;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Security;
+
 use function uniqid;
 
 /**
@@ -158,7 +161,8 @@ class SAMLController extends Controller
         // Write a rudimentary member with basic fields on every login, so that we at least have something
         // if there is no further sync (e.g. via LDAP)
         $member = Member::get()->filter('GUID', $guid)->limit(1)->first();
-        if (!($member && $member->exists())
+        if (
+            !($member && $member->exists())
             && Config::inst()->get(SAMLConfiguration::class, 'allow_insecure_email_linking')
             && isset($fieldToClaimMap['Email'])
         ) {
@@ -199,6 +203,9 @@ class SAMLController extends Controller
         // IdentityStore->logIn() is called, otherwise the identity store throws an exception.
         // Both SAML and LDAP identify Members by the same GUID field.
         $member->write();
+
+        // Hook for modifying login behaviour
+        $this->extend('updateLogin');
 
         /** @var IdentityStore $identityStore */
         $identityStore = Injector::inst()->get(IdentityStore::class);
@@ -241,14 +248,18 @@ class SAMLController extends Controller
     protected function getRedirect()
     {
         // Absolute redirection URLs may cause spoofing
-        if ($this->getRequest()->getSession()->get('BackURL')
-            && Director::is_site_url($this->getRequest()->getSession()->get('BackURL'))) {
+        if (
+            $this->getRequest()->getSession()->get('BackURL')
+            && Director::is_site_url($this->getRequest()->getSession()->get('BackURL'))
+        ) {
             return $this->redirect($this->getRequest()->getSession()->get('BackURL'));
         }
 
         // Spoofing attack, redirect to homepage instead of spoofing url
-        if ($this->getRequest()->getSession()->get('BackURL')
-            && !Director::is_site_url($this->getRequest()->getSession()->get('BackURL'))) {
+        if (
+            $this->getRequest()->getSession()->get('BackURL')
+            && !Director::is_site_url($this->getRequest()->getSession()->get('BackURL'))
+        ) {
             return $this->redirect(Director::absoluteBaseURL());
         }
 
