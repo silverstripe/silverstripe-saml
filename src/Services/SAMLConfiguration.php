@@ -6,6 +6,7 @@ use OneLogin\Saml2\Constants;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Control\Director;
+use SilverStripe\Core\Injector\Injector;
 
 /**
  * Class SAMLConfiguration
@@ -84,16 +85,18 @@ class SAMLConfiguration
         // SERVICE PROVIDER SECTION
         $sp = $this->config()->get('SP');
 
-        $spCertPath = Director::is_absolute($sp['x509cert'])
-            ? $sp['x509cert']
-            : sprintf('%s/%s', BASE_PATH, $sp['x509cert']);
-        $spKeyPath = Director::is_absolute($sp['privateKey'])
-            ? $sp['privateKey']
-            : sprintf('%s/%s', BASE_PATH, $sp['privateKey']);
+        $spX509Cert = Injector::inst()->convertServiceProperty($sp['x509cert']);
+        $spCertPath = Director::is_absolute($spX509Cert)
+            ? $spX509Cert
+            : sprintf('%s/%s', BASE_PATH, $spX509Cert);
+        $spPrivateKey = Injector::inst()->convertServiceProperty($sp['privateKey']);
+        $spKeyPath = Director::is_absolute($spPrivateKey)
+            ? $spPrivateKey
+            : sprintf('%s/%s', BASE_PATH, $spPrivateKey);
 
-        $conf['sp']['entityId'] = $sp['entityId'];
+        $conf['sp']['entityId'] = Injector::inst()->convertServiceProperty($sp['entityId']);
         $conf['sp']['assertionConsumerService'] = [
-            'url' => $sp['entityId'] . '/saml/acs',
+            'url' => Injector::inst()->convertServiceProperty($sp['entityId']) . '/saml/acs',
             'binding' => Constants::BINDING_HTTP_POST
         ];
         $conf['sp']['NameIDFormat'] = isset($sp['nameIdFormat']) ?
@@ -103,21 +106,22 @@ class SAMLConfiguration
 
         // IDENTITY PROVIDER SECTION
         $idp = $this->config()->get('IdP');
-        $conf['idp']['entityId'] = $idp['entityId'];
+        $conf['idp']['entityId'] = Injector::inst()->convertServiceProperty($idp['entityId']);
         $conf['idp']['singleSignOnService'] = [
-            'url' => $idp['singleSignOnService'],
+            'url' => Injector::inst()->convertServiceProperty($idp['singleSignOnService']),
             'binding' => Constants::BINDING_HTTP_REDIRECT,
         ];
         if (isset($idp['singleLogoutService'])) {
             $conf['idp']['singleLogoutService'] = [
-                'url' => $idp['singleLogoutService'],
+                'url' => Injector::inst()->convertServiceProperty($idp['singleLogoutService']),
                 'binding' => Constants::BINDING_HTTP_REDIRECT,
             ];
         }
 
-        $idpCertPath = Director::is_absolute($idp['x509cert'])
-            ? $idp['x509cert']
-            : sprintf('%s/%s', BASE_PATH, $idp['x509cert']);
+        $idpX509Cert = Injector::inst()->convertServiceProperty($idp['x509cert']);
+        $idpCertPath = Director::is_absolute($idpX509Cert)
+            ? $idpX509Cert
+            : sprintf('%s/%s', BASE_PATH, $idpX509Cert);
         $conf['idp']['x509cert'] = file_get_contents($idpCertPath);
 
         // SECURITY SECTION
