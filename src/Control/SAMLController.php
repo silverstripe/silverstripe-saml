@@ -153,8 +153,6 @@ class SAMLController extends Controller
             return $this->getRedirect();
         }
 
-        $this->extend('updateGuid', $guid);
-
         $attributes = $auth->getAttributes();
 
         // Allows setups that map GUID (email format) to email {@see SAMLConfiguration::$expose_guid_as_attribute}.
@@ -163,6 +161,7 @@ class SAMLController extends Controller
         }
 
         $this->extend('updateAttributes', $attributes);
+        $this->extend('updateGuid', $guid);
 
         $fieldToClaimMap = array_flip(Member::config()->claims_field_mappings);
 
