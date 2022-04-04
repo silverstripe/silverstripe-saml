@@ -36,6 +36,6 @@ class SAMLHelperTest extends SapphireTest
     public function testBinToStrGuid()
     {
         $result = SAMLHelper::singleton()->binToStrGuid('thequ!ckbrownf0xjumpsov3rthel4zyd06');
-        $this->assertSame('71656874-2175-6B63-6272-6F776E6630786A756D70736F7633727468656C347A79643036', $result);
+        $this->assertSame('71656874-2175-6B63-6272-6F776E663078', $result);
     }
 }
