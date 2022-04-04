@@ -125,7 +125,7 @@ class SAMLHelper
             $hex_guid_to_guid_str .= substr($hex_guid, 16 - 2 * $k, 2);
         }
         $hex_guid_to_guid_str .= '-' . substr($hex_guid, 16, 4);
-        $hex_guid_to_guid_str .= '-' . substr($hex_guid, 20);
+        $hex_guid_to_guid_str .= '-' . substr($hex_guid, 20, 12);
         return strtoupper($hex_guid_to_guid_str);
     }
 
