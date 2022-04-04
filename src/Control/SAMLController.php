@@ -162,6 +162,8 @@ class SAMLController extends Controller
             $attributes['GUID'][0] = $guid;
         }
 
+        $this->extend('updateAttributes', $attributes);
+
         $fieldToClaimMap = array_flip(Member::config()->claims_field_mappings);
 
         // Write a rudimentary member with basic fields on every login, so that we at least have something
