@@ -73,6 +73,18 @@ class SAMLConfiguration
     private static $allow_insecure_email_linking = false;
 
     /**
+     * @config
+     * @var bool Decide if GUID should be exposed as an attribute mappable using `GUID` as the claim. This is a feature
+     * that is found in other SAML libraries but in an ideal world should not be utilised in favour of the IdP offering
+     * the nameid data as another "more stable" attribute.
+     * 
+     * Note that this data will be effected by:
+     *  - The expect_binary_nameid configuration value
+     *  - The extension point `updateGuid` on SAMLController
+     */
+    private static $expose_guid_as_attribute = false;
+
+    /**
      * @return array
      */
     public function asArray()

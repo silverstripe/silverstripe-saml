@@ -153,6 +153,11 @@ class SAMLController extends Controller
 
         $attributes = $auth->getAttributes();
 
+        // Allows setups that map GUID (email format) to email {@see SAMLConfiguration::$expose_guid_as_attribute}.
+        if (Config::inst()->get(SAMLConfiguration::class, 'expose_guid_as_attribute')) {
+            $attributes['GUID'][0] = $guid;
+        }
+
         $fieldToClaimMap = array_flip(Member::config()->claims_field_mappings);
 
         // Write a rudimentary member with basic fields on every login, so that we at least have something
