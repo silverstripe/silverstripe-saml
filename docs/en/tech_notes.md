@@ -50,3 +50,60 @@ Records are manipulated in multiple places in the LDAP module (if you have it in
 * `LDAPAuthenticator::authenticate`: creates stub `Member` after authorisation (if non-existent).
 * `LDAPMemberExtension::memberLoggedIn`: triggers LDAP synchronisation, rewriting all `Member` fields.
 * `LDAPMemberSyncTask::run`: pulls all LDAP records and creates relevant `Members`.
+
+## NameID Validation
+
+Note that NameID validation is not essential to security and since most IdPs don't clarify format, validation is disabled by default.
+
+This section is very much configuration over convention. You should establish a stable nameID (format and claim source) with
+your IdP administrator rather than account for every case.
+
+**The size of the NameID is always validated to check if it will fit in the `GUID` field on `Member` (`DBVarchar(50)`).**
+
+Regarding this limit on the `GUID` field you can raise that (including the validation limit) via:
+```yml
+SilverStripe\Security\Member:
+  db:
+    GUID: 'Varchar(0-255)'
+```
+as long as this config has a higher [priority](https://docs.silverstripe.org/en/4/developer_guides/configuration/configuration/#before-after-priorities) than `SilverStripe\SAML\Extensions\SAMLMemberExtension`.
+This is not recommended if you already have data you don't plan on migrating within the GUID column.
+
+Some very basic NameID validation is available. You can enable this via the following config:
+```yml
+SilverStripe\SAML\Services\SAMLConfiguration:
+  validate_nameid: true
+```
+
+Out of the box the GUID NameID format is registered for Azure AD and ADFS. You can add more via extensions.
+
+For example adding Email validation for a response with the nameid format `urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress`:
+```php
+<?php
+
+namespace ACME\SAML\Extensions;
+
+use SilverStripe\Core\Extension;
+
+/**
+ * Class EmailNameIDValidationExtension
+ * 
+ * Validates a NameID in email form.
+ */
+class EmailNameIDValidationExtension extends Extension
+{
+    public function updateNameIDValidation(string $nameID, string $nameIDFormat): bool
+    {
+        if ($nameIDFormat !== 'urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress') {
+            return false;
+        }
+
+        return (bool) filter_var($nameID, FILTER_VALIDATE_EMAIL);
+    }
+}
+```
+```yml
+SilverStripe\SAML\Services\SAMLConfiguration:
+  extensions:
+    - ACME\SAML\Extensions\EmailNameIDValidationExtension
+```
