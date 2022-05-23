@@ -85,6 +85,19 @@ class SAMLConfiguration
     private static $expose_guid_as_attribute = false;
 
     /**
+     * @config
+     * @var bool Decide if a SAMLResponse's nameid should be validated.
+     * 
+     * By default validation consists of two steps:
+     *  1. Will the nameID fit in the allocated varchar size of the `GUID` field on Member? (This disregards this config and always happens)
+     *  1. Is the nameID in a GUID pattern?
+     * 
+     * You can add different methods of validation via SAMLHelper's `updateNameIDValidation` extension point.
+     * An example can be found in {@see EmailNameIDValidationExtension}.
+     */
+    private static $validate_nameid = false;
+
+    /**
      * @return array
      */
     public function asArray()

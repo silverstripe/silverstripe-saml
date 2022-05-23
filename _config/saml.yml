@@ -16,6 +16,10 @@ SilverStripe\Core\Injector\Injector:
 SilverStripe\SAML\Authenticators\SAMLAuthenticator:
   name: "SAML"
 
+SilverStripe\SAML\Helpers\SAMLHelper:
+  extensions:
+    - SilverStripe\SAML\Extensions\GUIDNameIDValidationExtension
+
 SilverStripe\SAML\Services\SAMLConfiguration:
   strict: true
   debug: false

@@ -8,12 +8,15 @@ use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Control\HTTPResponse_Exception;
 use SilverStripe\Control\RequestHandler;
+use SilverStripe\Core\Extensible;
+use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\SAML\Authenticators\SAMLLoginHandler;
 use SilverStripe\SAML\Control\SAMLController;
 use SilverStripe\SAML\Services\SAMLConfiguration;
 use OneLogin\Saml2\Auth;
+use SilverStripe\Security\Member;
 
 /**
  * Class SAMLHelper
@@ -24,6 +27,7 @@ use OneLogin\Saml2\Auth;
 class SAMLHelper
 {
     use Injectable;
+    use Extensible;
 
     /**
      * @var array
@@ -88,17 +92,31 @@ class SAMLHelper
     }
 
     /**
-     * Checks if the string is a valid guid in the format of A98C5A1E-A742-4808-96FA-6F409E799937
-     * Case in-sensitive
+     * Validates a NameID.
      *
-     * @param  string $guid
+     * @param  string $nameID
+     * @param  string $nameIDFormat
      * @return bool
      */
-    public function validGuid($guid)
+    public function validateNameID($nameID, $nameIDFormat): bool
     {
-        if (preg_match('/^[A-F0-9]{8}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{12}?$/i', $guid)) {
+        // Validate: Must fit within maximum size of DBVarchar.
+        $nameIDMaxSize = singleton(Member::class)->dbObject('GUID')->getSize();
+        if (strlen($nameID) > $nameIDMaxSize) {
+            return false;
+        }
+
+        // OK IF: We don't wish to do any further validation.
+        if (!Config::inst()->get(SAMLConfiguration::class, 'validate_nameid')) {
             return true;
         }
+
+        // OK IF: One of the registered extensions returns true.
+        $validationResults = $this->extend('updateNameIDValidation', $nameID, $nameIDFormat);
+        if ($validationResults && is_array($validationResults)) {
+            return (bool) max($validationResults);
+        }
+
         return false;
     }
 
