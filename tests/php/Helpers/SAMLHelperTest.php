@@ -4,6 +4,8 @@ namespace SilverStripe\SAML\Tests\Helpers;
 
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\SAML\Helpers\SAMLHelper;
+use SilverStripe\Core\Config\Config;
+use SilverStripe\SAML\Services\SAMLConfiguration;
 
 class SAMLHelperTest extends SapphireTest
 {
@@ -14,7 +16,8 @@ class SAMLHelperTest extends SapphireTest
      */
     public function testValidGuid($guid, $expected)
     {
-        $result = SAMLHelper::singleton()->validGuid($guid);
+        Config::modify()->set(SAMLConfiguration::class, 'validate_nameid', true);
+        $result = SAMLHelper::singleton()->validateNameID($guid, 'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified');
         $this->assertSame($expected, $result);
     }
 
@@ -31,6 +34,18 @@ class SAMLHelperTest extends SapphireTest
             ['A98C5A1E-4808-96FA-6F409E799937', false],
             ['foobar', false],
         ];
+    }
+
+    /**
+     * @testdox A long NameID that would exceed the max of a Member's GUID field should fail validation.
+     */
+    public function testLongNameIDFails()
+    {
+        $result = SAMLHelper::singleton()->validateNameID(
+            'my-excessively-long-nameid-which-is-quite-ridiculous', // 52 chars
+            'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified'
+        );
+        $this->assertFalse($result);
     }
 
     public function testBinToStrGuid()
