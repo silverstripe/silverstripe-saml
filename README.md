@@ -1,6 +1,6 @@
 # SilverStripe SAML module
 
-[![Build Status](https://travis-ci.org/silverstripe/silverstripe-saml.svg)](https://travis-ci.org/silverstripe/silverstripe-saml)
+[![Build Status](https://github.com/silverstripe/silverstripe-saml/actions/workflows/ci.yml/badge.svg)](https://github.com/silverstripe/silverstripe-saml/actions/workflows/ci.yml)
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/silverstripe/silverstripe-saml/badges/quality-score.png)](https://scrutinizer-ci.com/g/silverstripe/silverstripe-saml/)
 [![codecov](https://codecov.io/gh/silverstripe/silverstripe-saml/branch/master/graph/badge.svg)](https://codecov.io/gh/silverstripe/silverstripe-saml)
 
