@@ -29,7 +29,7 @@ This component can also be used alongside the default SilverStripe authenticatio
 
 ## Requirements
 
- * PHP 5.6+ with extensions: openssl, dom
+ * PHP 7.4+ with extensions: openssl, dom
  * SilverStripe 4.0+
  * Active Directory Federation Services 2.0 or greater (ADFS)
  * HTTPS endpoint on SilverStripe site
