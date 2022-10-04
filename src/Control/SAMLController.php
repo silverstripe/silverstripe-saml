@@ -137,11 +137,15 @@ class SAMLController extends Controller
 
             // transform the NameId to guid
             $guid = $helper->binToStrGuid($decodedNameId);
+            $validateGuid = true;
         } else {
             $guid = $auth->getNameId();
+            // If you do not expect your NameId to be formatted as a valid GUID, then you can update this config to
+            // false
+            $validateGuid = Config::inst()->get(SAMLConfiguration::class, 'validate_nameid_as_guid');
         }
 
-        if (!$helper->validGuid($guid)) {
+        if ($validateGuid && !$helper->validGuid($guid)) {
             $errorMessage = "Not a valid GUID '{$guid}' received from server.";
             $this->getLogger()->error($errorMessage);
             $this->getForm()->sessionMessage($errorMessage, ValidationResult::TYPE_ERROR);
