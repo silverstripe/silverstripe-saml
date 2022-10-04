@@ -20,6 +20,9 @@ SilverStripe\SAML\Services\SAMLConfiguration:
   strict: true
   debug: false
   expect_binary_nameid: true
+  # If expect_binary_nameid is set to false, then you might also need to clarify whether or not you expect the nameid
+  # to be a valid GUID
+  validate_nameid_as_guid: true
   allow_insecure_email_linking: false
   Security:
     # Algorithm that the toolkit will use on signing process. Options:
