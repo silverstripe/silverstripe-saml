@@ -153,7 +153,7 @@ SilverStripe\SAML\Extensions\SAMLMemberExtension:
 
 ### GUID Transformation
 
-If you prefer to receive the GUID in lower-case or upper-case format you can use the 
+If you prefer to receive the GUID in lower-case or upper-case format you can use the
 `updateGuid()` extension point on `\SilverStripe\SAML\Control\SAMLController`.
 
 ## Establish trust
@@ -185,7 +185,7 @@ SilverStripe\Core\Injector\Injector:
   SilverStripe\Security\Security:
     properties:
       Authenticators:
-        default: %$SilverStripe\SAML\Authenticators\SAMLAuthenticator
+        default: '%$SilverStripe\SAML\Authenticators\SAMLAuthenticator'
 ```
 
 **Note:** to prevent locking yourself out if using the LDAP module as well, before you remove the "MemberAuthenticator" make sure you map at least one LDAP group to the SilverStripe `Administrator` Security Group. Consult [CMS usage docs](usage.md) for how to do it.
@@ -199,7 +199,7 @@ SilverStripe\Core\Injector\Injector:
   SilverStripe\Security\Security:
     properties:
       authenticators:
-        default: %$SilverStripe\SAML\Authenticators\SAMLAuthenticator
+        default: '%$SilverStripe\SAML\Authenticators\SAMLAuthenticator'
 ```
 
 You can enable the middleware like so:
@@ -209,7 +209,7 @@ SilverStripe\Core\Injector\Injector:
   SilverStripe\Control\Director:
     properties:
       Middlewares:
-        SAMLMiddleware: %$SilverStripe\SAML\Middleware\SAMLMiddleware
+        SAMLMiddleware: '%$SilverStripe\SAML\Middleware\SAMLMiddleware'
 SilverStripe\SAML\Middleware\SAMLMiddleware:
   enabled: true
 ```
