@@ -9,15 +9,14 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-
-- [Introduction](#introduction)
-- [Requirements](#requirements)
-- [Overview](#overview)
-- [Security](#security)
-- [In-depth guides](#in-depth-guides)
-  - [For SilverStripe developers](#for-silverstripe-developers)
-  - [For identity provider administrators](#for-identity-provider-administrators)
-- [Changelog](#changelog)
+-   [Introduction](#introduction)
+-   [Requirements](#requirements)
+-   [Overview](#overview)
+-   [Security](#security)
+-   [In-depth guides](#in-depth-guides)
+    -   [For SilverStripe developers](#for-silverstripe-developers)
+    -   [For identity provider administrators](#for-identity-provider-administrators)
+-   [Changelog](#changelog)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -29,23 +28,23 @@ This component can also be used alongside the default SilverStripe authenticatio
 
 ## Requirements
 
- * PHP 7.4+ with extensions: openssl, dom
- * SilverStripe 4.0+
- * Active Directory Federation Services 2.0 or greater (ADFS)
- * HTTPS endpoint on SilverStripe site
- * HTTPS endpoint on ADFS
+-   PHP 8+ with extensions: openssl, dom
+-   SilverStripe 5+ (see `2` branch for SilverStripe 4)
+-   Active Directory Federation Services 2.0 or greater (ADFS)
+-   HTTPS endpoint on SilverStripe site
+-   HTTPS endpoint on ADFS
 
 This module has prevoiously been tested on the following configurations, but is now untested:
 
- * Windows Server 2008 R2 with ADFS 2.0
- * Windows Server 2012 R2 with ADFS 3.0
+-   Windows Server 2008 R2 with ADFS 2.0
+-   Windows Server 2012 R2 with ADFS 3.0
 
 **Note:** For LDAP only Active Directory integration, please see [silverstripe-ldap](https://github.com/silverstripe/silverstripe-ldap).
 
 ## Overview
 
 ![](docs/en/img/saml_ad_integration.png)
-*(Image) Typical authentication and authorisation flow for this module*
+_(Image) Typical authentication and authorisation flow for this module_
 
 [Security Assertion Markup Language (SAML)](http://en.wikipedia.org/wiki/Security_Assertion_Markup_Language) is an XML-based, open-standard data format for exchanging authentication and authorization data between parties. The single most important requirement that SAML addresses is web browser single sign-on (SSO).
 
@@ -69,14 +68,15 @@ SilverStripe trusts ADFS responses based on pre-shared X509 certificates. These 
 
 ### For SilverStripe developers
 
-* [Developer guide](docs/en/developer.md) - configure your SilverStripe site
-* [Troubleshooting](docs/en/troubleshooting.md) - common problems
+-   [Developer guide](docs/en/developer.md) - configure your SilverStripe site
+-   [Troubleshooting](docs/en/troubleshooting.md) - common problems
 
 ### For identity provider administrators
 
 These guides will help you prepare your identity provider and configure it to work with the module correctly.
-* [ADFS administrator guide](docs/en/adfs.md)
-* [Azure AD administrator guide](docs/en/azure-ad.md)
+
+-   [ADFS administrator guide](docs/en/adfs.md)
+-   [Azure AD administrator guide](docs/en/azure-ad.md)
 
 ## Changelog
 

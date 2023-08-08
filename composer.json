@@ -2,7 +2,14 @@
     "name": "silverstripe/saml",
     "description": "Adds SSO/SAML authentication support to SilverStripe",
     "type": "silverstripe-vendormodule",
-    "keywords": ["silverstripe", "ad", "active", "directory", "sso", "saml"],
+    "keywords": [
+        "silverstripe",
+        "ad",
+        "active",
+        "directory",
+        "sso",
+        "saml"
+    ],
     "license": "BSD-3-Clause",
     "authors": [
         {
@@ -15,9 +22,7 @@
         }
     ],
     "require": {
-        "php": ">=7.4",
         "silverstripe/framework": "^5",
-        "silverstripe/cms": "^5",
         "onelogin/php-saml": "^4.1.0"
     },
     "require-dev": {
@@ -26,7 +31,7 @@
     },
     "extra": {
         "branch-alias": {
-            "dev-master": "1.0.x-dev"
+            "dev-main": "3.0.x-dev"
         }
     },
     "autoload": {
