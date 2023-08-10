@@ -110,7 +110,7 @@ class SAMLController extends Controller
                 _t(
                     'SilverStripe\\SAML\\Control\\SAMLController.ERR_SAML_ACS_FAILURE',
                     'Unfortunately we couldn\'t log you in. If this continues, please contact your I.T. department'
-                    . ' with the following reference: {ref}',
+                        . ' with the following reference: {ref}',
                     ['ref' => $uniqueErrorId]
                 ),
                 ValidationResult::TYPE_ERROR
@@ -170,13 +170,12 @@ class SAMLController extends Controller
         // Write a rudimentary member with basic fields on every login, so that we at least have something
         // if there is no further sync (e.g. via LDAP)
         $member = Member::get()->filter('GUID', $guid)->limit(1)->first();
-        if (
-            !($member && $member->exists())
-            && Config::inst()->get(SAMLConfiguration::class, 'allow_insecure_email_linking')
-            && isset($fieldToClaimMap['Email'])
-        ) {
+        $insecure = Config::inst()->get(SAMLConfiguration::class, 'allow_insecure_email_linking');
+
+        if (!($member && $member->exists()) && $insecure && isset($fieldToClaimMap['Email'])) {
             // If there is no member found via GUID and we allow linking via email, search by email
-            $member = Member::get()->filter('Email', $attributes[$fieldToClaimMap['Email']])->limit(1)->first();
+            $att = $attributes[$fieldToClaimMap['Email']];
+            $member = Member::get()->filter('Email', $att)->limit(1)->first();
 
             if (!($member && $member->exists())) {
                 $member = new Member();
@@ -194,7 +193,7 @@ class SAMLController extends Controller
                 $this->getLogger()->warning(
                     sprintf(
                         'Claim rule \'%s\' configured in SAMLMemberExtension.claims_field_mappings, ' .
-                                'but wasn\'t passed through. Please check IdP claim rules.',
+                            'but wasn\'t passed through. Please check IdP claim rules.',
                         $claim
                     )
                 );
@@ -257,24 +256,20 @@ class SAMLController extends Controller
     protected function getRedirect()
     {
         // Absolute redirection URLs may cause spoofing
-        if (
-            $this->getRequest()->getSession()->get('BackURL')
-            && Director::is_site_url($this->getRequest()->getSession()->get('BackURL'))
-        ) {
+        $back = $this->getRequest()->getSession()->get('BackURL');
+
+        if ($back && Director::is_site_url($back)) {
             return $this->redirect($this->getRequest()->getSession()->get('BackURL'));
         }
 
         // Spoofing attack, redirect to homepage instead of spoofing url
-        if (
-            $this->getRequest()->getSession()->get('BackURL')
-            && !Director::is_site_url($this->getRequest()->getSession()->get('BackURL'))
-        ) {
+        if ($back && !Director::is_site_url($back)) {
             return $this->redirect(Director::absoluteBaseURL());
         }
 
         // If a default login dest has been set, redirect to that.
-        if (Security::config()->default_login_dest) {
-            return $this->redirect(Director::absoluteBaseURL() . Security::config()->default_login_dest);
+        if ($dest = Security::config()->default_login_dest) {
+            return $this->redirect(Director::absoluteBaseURL() . $dest);
         }
 
         // fallback to redirect back to home page
