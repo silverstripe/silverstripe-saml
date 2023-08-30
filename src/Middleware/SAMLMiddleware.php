@@ -63,7 +63,7 @@ class SAMLMiddleware implements HTTPMiddleware
             return $delegate($request);
         }
 
-        // If we get this far, then the middleware is enabled, doensdoesn't match an exclusion rule, and the user is not
+        // If we get this far, then the middleware is enabled, doesn't match an exclusion rule, and the user is not
         // logged in. Therefore, we should redirect them to the identity provider to log in, and set the back URL to the
         // current URL for when they successfully return
         /** @var SAMLHelper $helper */
