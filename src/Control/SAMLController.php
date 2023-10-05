@@ -6,27 +6,28 @@ use Exception;
 
 use function gmmktime;
 
+use function uniqid;
 use OneLogin\Saml2\Auth;
 use OneLogin\Saml2\Constants;
-use OneLogin\Saml2\Utils;
 use OneLogin\Saml2\Error;
+use OneLogin\Saml2\Utils;
 use Psr\Log\LoggerInterface;
+use SilverStripe\Control\Controller;
+use SilverStripe\Control\Director;
+use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Core\Config\Config;
+use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ORM\ValidationResult;
 use SilverStripe\SAML\Authenticators\SAMLAuthenticator;
 use SilverStripe\SAML\Authenticators\SAMLLoginForm;
 use SilverStripe\SAML\Helpers\SAMLHelper;
-use SilverStripe\Control\Controller;
-use SilverStripe\Control\Director;
-use SilverStripe\Control\HTTPResponse;
-use SilverStripe\Core\Injector\Injector;
+use SilverStripe\SAML\Helpers\SAMLUserGroupMapper;
 use SilverStripe\SAML\Model\SAMLResponse;
 use SilverStripe\SAML\Services\SAMLConfiguration;
 use SilverStripe\Security\IdentityStore;
+
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Security;
-
-use function uniqid;
 
 /**
  * Class SAMLController
@@ -202,6 +203,14 @@ class SAMLController extends Controller
             }
 
             $member->$field = $attributes[$claim][0];
+        }
+
+        $mapUserGroup = Config::inst()->get(SAMLConfiguration::class, 'map_user_group');
+        // Map user groups
+        if ($mapUserGroup) {
+            $mapper = SAMLUserGroupMapper::singleton();
+
+            $member = $mapper->map($attributes, $member);
         }
 
         $member->SAMLSessionIndex = $auth->getSessionIndex();
