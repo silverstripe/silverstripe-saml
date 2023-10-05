@@ -207,14 +207,6 @@ class SAMLController extends Controller
             $member->$field = $attributes[$claim][0];
         }
 
-        $mapUserGroup = Config::inst()->get(SAMLConfiguration::class, 'map_user_group');
-        // Map user groups
-        if ($mapUserGroup) {
-            $mapper = SAMLUserGroupMapper::singleton();
-
-            $member = $mapper->map($attributes, $member);
-        }
-
         $member->SAMLSessionIndex = $auth->getSessionIndex();
 
         // This will trigger LDAP update through LDAPMemberExtension::memberLoggedIn, if the LDAP module is installed.
@@ -222,6 +214,14 @@ class SAMLController extends Controller
         // IdentityStore->logIn() is called, otherwise the identity store throws an exception.
         // Both SAML and LDAP identify Members by the same GUID field.
         $member->write();
+
+        $mapUserGroup = Config::inst()->get(SAMLConfiguration::class, 'map_user_group');
+        // Map user groups
+        if ($mapUserGroup) {
+            $mapper = SAMLUserGroupMapper::singleton();
+
+            $member = $mapper->map($attributes, $member);
+        }
 
         /** @var IdentityStore $identityStore */
         $identityStore = Injector::inst()->get(IdentityStore::class);
