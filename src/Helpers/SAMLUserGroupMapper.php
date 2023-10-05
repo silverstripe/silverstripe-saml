@@ -26,6 +26,13 @@ class SAMLUserGroupMapper
         'SAMLConfService' => '%$' . SAMLConfiguration::class,
     ];
 
+    /**
+     * Check if group claims field is set and assigns member to group
+     *
+     * @param [] $attributes
+     * @param Member $member
+     * @return Member
+     */
     public function map($attributes, $member): Member
     {
         $groups = $this->config()->get('group_claims_field');
@@ -39,18 +46,22 @@ class SAMLUserGroupMapper
 
         foreach ($groupTitles as $groupTitle) {
             // Get Group object by Title
-            // TODO: Title for Group should be unique
             $group = DataObject::get_one(Group::class, [
                 '"Group"."Title"' => $groupTitle
             ]);
 
+            // Create group if it doesn't exist yet
             if (!$group) {
                 $group = new Group();
                 $group->Title = $groupTitle;
                 $group->write();
             }
 
-            $member->write();
+            // Add group to user and make sure user has been created
+            if (!$member->exists()) {
+                $member->write();
+            }
+
             $member->Groups()->add($group);
         }
 
