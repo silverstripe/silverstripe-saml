@@ -57,11 +57,6 @@ class SAMLUserGroupMapper
                 $group->write();
             }
 
-            // Add group to user and make sure user has been created
-            if (!$member->exists()) {
-                $member->write();
-            }
-
             $member->Groups()->add($group);
         }
 
