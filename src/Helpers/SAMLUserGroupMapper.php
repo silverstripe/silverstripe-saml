@@ -14,15 +14,17 @@ class SAMLUserGroupMapper
     use Injectable;
     use Configurable;
 
-    /**
-     * @var string
-     */
-    private static $group_claims_field;
+    private static string $group_claims_field = '';
+
+    private static array $group_map = [];
+
+    // TODO use this
+    private static bool $override_group = false;
 
     /**
      * @var array
      */
-    private static $dependencies = [
+    private static array $dependencies = [
         'SAMLConfService' => '%$' . SAMLConfiguration::class,
     ];
 
@@ -35,16 +37,24 @@ class SAMLUserGroupMapper
      */
     public function map($attributes, $member): Member
     {
-        $groups = $this->config()->get('group_claims_field');
+        $groupClaimsField = $this->config()->get('group_claims_field');
+        $groupMap = $this->config()->get('group_map');
 
-        if (!isset($attributes[$groups])) {
+        // Check that group claims field has sent through from provider
+        if (!isset($attributes[$groupClaimsField])) {
             return $member;
         }
 
         // Get groups from saml response
-        $groupTitles = $attributes[$groups];
+        $groups = $attributes[$groupClaimsField];
 
-        foreach ($groupTitles as $groupTitle) {
+        foreach ($groups as $groupID) {
+            // Check that group is a valid group with group map
+            if (!array_key_exists($groupID, $groupMap)) {
+                continue;
+            }
+            $groupTitle = $groupMap[$groupID];
+
             // Get Group object by Title
             $group = DataObject::get_one(Group::class, [
                 '"Group"."Title"' => $groupTitle
