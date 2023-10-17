@@ -14,19 +14,20 @@ class SAMLUserGroupMapper
     use Injectable;
     use Configurable;
 
+    /**
+     * Group claims field URL defined on IdP
+     */
     private static string $group_claims_field = '';
 
+    /**
+     * Defines the mapping between the group defined on IdP and the CMS
+     */
     private static array $group_map = [];
 
-    // TODO use this
-    private static bool $override_group = false;
-
     /**
-     * @var array
+     * Allow addition of member to a manually-created group which does not exist on IdP
      */
-    private static array $dependencies = [
-        'SAMLConfService' => '%$' . SAMLConfiguration::class,
-    ];
+    private static bool $allow_manual_group = false;
 
     /**
      * Check if group claims field is set and assigns member to group
@@ -40,13 +41,25 @@ class SAMLUserGroupMapper
         $groupClaimsField = $this->config()->get('group_claims_field');
         $groupMap = $this->config()->get('group_map');
 
+        // Get groups from saml response
+        $groups = $attributes[$groupClaimsField];
+
         // Check that group claims field has sent through from provider
-        if (!isset($attributes[$groupClaimsField])) {
+        if (!isset($groups)) {
             return $member;
         }
 
-        // Get groups from saml response
-        $groups = $attributes[$groupClaimsField];
+        // Check if group mapping exists
+        if (count($groupMap) <= 0) {
+            return $member;
+        }
+
+        // Remove member from any group before group assignment except manual group
+        if ($this->config()->get('allow_manual_group')) {
+            $this->removeMemberFromGroups($member, true);
+        } else {
+            $this->removeMemberFromGroups($member);
+        }
 
         foreach ($groups as $groupID) {
             // Check that group is a valid group with group map
@@ -67,9 +80,43 @@ class SAMLUserGroupMapper
                 $group->write();
             }
 
-            $member->Groups()->add($group);
+            // Add member to the group
+            $group->Members()->add($member);
         }
 
         return $member;
+    }
+
+    /**
+     * Remove the member from current CMS groups except for manual override
+     */
+    protected function removeMemberFromGroups(Member &$member, bool $allowManualGroup = false)
+    {
+        if (!$member) {
+            return false;
+        }
+
+        // Remove all groups associated with this member
+        if (!$allowManualGroup) {
+            $member->Groups()->removeAll();
+        }
+
+        $groupMap = $this->config()->get('group_map');
+
+        // Check if group mapping exists
+        if (count($groupMap) <= 0) {
+            return false;
+        }
+
+        // loop through defined group map and remove member
+        foreach ($groupMap as $id => $groupTitle) {
+            $group = $group = DataObject::get_one(Group::class, [
+                '"Group"."Title"' => $groupTitle
+            ]);
+
+            if ($group) {
+                $group->Members()->removeByID($member->ID);
+            }
+        }
     }
 }
