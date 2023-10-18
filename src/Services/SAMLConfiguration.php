@@ -93,6 +93,19 @@ class SAMLConfiguration
     private static $additional_get_query_params = [];
 
     /**
+     * @config
+     * @var bool Check if NameID is a valid GUID. If you do not expect your NameId to be formatted as a valid GUID,
+     * then you can update this config to false.
+     */
+    private static $validate_nameid_as_guid = false;
+
+    /**
+     * @config
+     * @var bool Enable or disable group mapping.
+     */
+    private static $map_user_group = false;
+
+    /**
      * @return array
      */
     public function asArray()
