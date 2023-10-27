@@ -2,8 +2,10 @@
 
 namespace SilverStripe\SAML\Helpers;
 
+use Psr\Log\LoggerInterface;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injectable;
+use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\SAML\Services\SAMLConfiguration;
 use SilverStripe\Security\Group;
@@ -38,11 +40,25 @@ class SAMLUserGroupMapper
      */
     public function map($attributes, $member): Member
     {
+        $logger = Injector::inst()->get(LoggerInterface::class);
         $groupClaimsField = $this->config()->get('group_claims_field');
         $groupMap = $this->config()->get('group_map');
 
         // Get groups from saml response
         $groups = $attributes[$groupClaimsField];
+
+        // log group mapping details
+        $logger->info('----- Group mapping before sync -----');
+        $logger->info(sprintf('Member ID: %s', $member?->ID));
+        $logger->info(
+            sprintf(
+                'Current member groups: %s',
+                json_encode($member->Groups()->column('Title'), JSON_THROW_ON_ERROR)
+            )
+        );
+        $logger->info(sprintf('Group (IdP) claims field: %s', $groupClaimsField));
+        $logger->info(sprintf('Group mapping: %s', json_encode($groupMap, JSON_THROW_ON_ERROR)));
+        $logger->info(sprintf('IdP Attributes: %s', json_encode($attributes, JSON_THROW_ON_ERROR)));
 
         // Check that group claims field has sent through from provider
         if (!isset($groups)) {
@@ -83,6 +99,16 @@ class SAMLUserGroupMapper
             // Add member to the group
             $group->Members()->add($member);
         }
+
+        // log group mapping details
+        $logger->info('----- Group mapping after sync -----');
+        $logger->info(sprintf('Member ID: %s', $member?->ID));
+        $logger->info(
+            sprintf(
+                'Current member groups: %s',
+                json_encode($member->Groups()->column('Title'), JSON_THROW_ON_ERROR)
+            )
+        );
 
         return $member;
     }
