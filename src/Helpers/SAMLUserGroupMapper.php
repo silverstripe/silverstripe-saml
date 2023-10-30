@@ -22,7 +22,10 @@ class SAMLUserGroupMapper
     private static string $group_claims_field = '';
 
     /**
-     * Defines the mapping between the group defined on IdP and the CMS
+     * Defines the mapping between the group defined on IdP and the CMS.
+     *
+     * Note: Groups should be defined on both group_map config and IdP (Azure) before a member can be added. If a
+     * group is defined only on Azure, the group will not be created or the member added.
      */
     private static array $group_map = [];
 
@@ -44,37 +47,30 @@ class SAMLUserGroupMapper
         $groupClaimsField = $this->config()->get('group_claims_field');
         $groupMap = $this->config()->get('group_map');
 
-        // Get groups from saml response
-        $groups = $attributes[$groupClaimsField];
-
-        // log group mapping details
-        $logger->info('----- Group mapping before sync -----');
-        $logger->info(sprintf('Member ID: %s', $member?->ID));
-        $logger->info(
-            sprintf(
-                'Current member groups: %s',
-                json_encode($member->Groups()->column('Title'), JSON_THROW_ON_ERROR)
-            )
-        );
-        $logger->info(sprintf('Group (IdP) claims field: %s', $groupClaimsField));
-        $logger->info(sprintf('Group mapping: %s', json_encode($groupMap, JSON_THROW_ON_ERROR)));
         $logger->info(sprintf('IdP Attributes: %s', json_encode($attributes, JSON_THROW_ON_ERROR)));
 
-        // Check that group claims field has sent through from provider
-        if (!isset($groups)) {
-            return $member;
-        }
-
-        // Check if group mapping exists
+        // Check if group mapping config exists
         if (count($groupMap) <= 0) {
             return $member;
         }
 
-        // Remove member from any group before group assignment except manual group
+        // Remove member from any group (except if manual group is allowed) before syncing
         if ($this->config()->get('allow_manual_group')) {
             $this->removeMemberFromGroups($member, true);
         } else {
             $this->removeMemberFromGroups($member);
+        }
+
+        // Get groups from SAML response
+        if (!array_key_exists($groupClaimsField, $attributes)) {
+            return $member;
+        }
+
+        $groups = $attributes[$groupClaimsField];
+
+        // Check that group claims field has sent through from provider
+        if (!isset($groups)) {
+            return $member;
         }
 
         foreach ($groups as $groupID) {
@@ -100,16 +96,6 @@ class SAMLUserGroupMapper
             $group->Members()->add($member);
         }
 
-        // log group mapping details
-        $logger->info('----- Group mapping after sync -----');
-        $logger->info(sprintf('Member ID: %s', $member?->ID));
-        $logger->info(
-            sprintf(
-                'Current member groups: %s',
-                json_encode($member->Groups()->column('Title'), JSON_THROW_ON_ERROR)
-            )
-        );
-
         return $member;
     }
 
@@ -125,6 +111,7 @@ class SAMLUserGroupMapper
         // Remove all groups associated with this member
         if (!$allowManualGroup) {
             $member->Groups()->removeAll();
+            return false;
         }
 
         $groupMap = $this->config()->get('group_map');
