@@ -156,6 +156,9 @@ class SAMLController extends Controller
 
         $attributes = $auth->getAttributes();
 
+        // Update GUID using information from SAML response
+        $this->extend('updateGuid', $guid, $attributes);
+
         // Allows setups that map GUID (email format) to email {@see SAMLConfiguration::$expose_guid_as_attribute}.
         if (Config::inst()->get(SAMLConfiguration::class, 'expose_guid_as_attribute')) {
             $attributes['GUID'][0] = $guid;
@@ -173,6 +176,7 @@ class SAMLController extends Controller
         // Write a rudimentary member with basic fields on every login, so that we at least have something
         // if there is no further sync (e.g. via LDAP)
         $member = Member::get()->filter('GUID', $guid)->limit(1)->first();
+
         if (!($member && $member->exists())
             && Config::inst()->get(SAMLConfiguration::class, 'allow_insecure_email_linking')
             && isset($fieldToClaimMap['Email'])
@@ -196,7 +200,7 @@ class SAMLController extends Controller
                 $this->getLogger()->warning(
                     sprintf(
                         'Claim rule \'%s\' configured in SAMLMemberExtension.claims_field_mappings, ' .
-                                'but wasn\'t passed through. Please check IdP claim rules.',
+                        'but wasn\'t passed through. Please check IdP claim rules.',
                         $claim
                     )
                 );
