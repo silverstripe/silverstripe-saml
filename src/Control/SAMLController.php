@@ -163,6 +163,10 @@ class SAMLController extends Controller
         $this->extend('updateAttributes', $attributes);
         $this->extend('updateGuid', $guid);
 
+        $request = $this->getRequest();
+        $this->extend('updateRequest', $request);
+        $this->setRequest($request);
+
         $fieldToClaimMap = array_flip(Member::config()->claims_field_mappings);
 
         // Write a rudimentary member with basic fields on every login, so that we at least have something
