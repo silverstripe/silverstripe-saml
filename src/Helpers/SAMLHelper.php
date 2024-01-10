@@ -75,7 +75,8 @@ class SAMLHelper
         $additionalGetQueryParams = $this->getAdditionalGETQueryParameters();
 
         try {
-            $auth->login(Director::absoluteBaseURL() . 'saml/', $additionalGetQueryParams);
+            // Use RelayState to convey BackURL (will be handled in SAMLController).
+            $auth->login($backURL, $additionalGetQueryParams);
         } catch (Exception $e) {
             /** @var LoggerInterface $logger */
             $logger = Injector::inst()->get(LoggerInterface::class);
