@@ -21,6 +21,7 @@ We assume ADFS 2.0 or greater is used as an IdP.
   - [Service Provider (SP)](#service-provider-sp)
   - [Identity Provider (IdP)](#identity-provider-idp)
   - [Additional configuration for Azure AD](#additional-configuration-for-azure-ad)
+  - [User groups mapping](#user-groups-mapping)
   - [GUID Transformation](#guid-transformation)
 - [Establish trust](#establish-trust)
 - [Configure SilverStripe Authenticators](#configure-silverstripe-authenticators)
@@ -37,6 +38,7 @@ We assume ADFS 2.0 or greater is used as an IdP.
   - [Adjust the requested AuthN contexts](#adjust-the-requested-authn-contexts)
   - [Create your own SAML configuration for completely custom settings](#create-your-own-saml-configuration-for-completely-custom-settings)
   - [Additional GET Query Params for SAML](#additional-get-query-params-for-saml)
+  - [Automatically redirect after authentication](#automatically-redirect-after-authentication)
 - [Resources](#resources)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -149,6 +151,22 @@ SilverStripe\SAML\Services\SAMLConfiguration:
 SilverStripe\SAML\Extensions\SAMLMemberExtension:
   claims_field_mappings:
     'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name': 'Email'
+```
+
+### User groups mapping
+
+By default, any new users logged in using SSO will not have any groups assigned to them. User groups can be enabled via
+
+```yml
+SilverStripe\SAML\Services\SAMLConfiguration:
+  map_user_group: true
+```
+
+and specify the claims field to map
+
+```yml
+SilverStripe\SAML\Helpers\SAMLUserGroupMapper:
+  group_claims_field: 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/groups'
 ```
 
 ### GUID Transformation
@@ -391,6 +409,14 @@ SilverStripe\SAML\Services\SAMLConfiguration:
 
 this configuration allows you to add two GET query parameters to endpoint request URL:
 `https://your-idp.com/singleSignOnService/saml2?someGetQueryParameter=value&AnotherParameter=differentValue&SAMLRequest=XYZ....`
+
+### Automatically redirect after authentication
+If the user has CMS permission and you want to redirect to the CMS after successful authentication, you can set the default login destination via:
+
+```yaml
+SilverStripe\Security\Security:
+  default_login_dest: 'admin'
+```
 
 ## Resources
 
