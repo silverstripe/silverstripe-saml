@@ -339,6 +339,6 @@ class SAMLController extends Controller
      */
     public function getForm()
     {
-        return Injector::inst()->get(SAMLLoginForm::class, true, [$this, SAMLAuthenticator::class, 'LoginForm']);
+        return Injector::inst()->get(SAMLLoginForm::class, false, [$this, SAMLAuthenticator::class, 'LoginForm']);
     }
 }
