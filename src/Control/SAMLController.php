@@ -260,6 +260,16 @@ class SAMLController extends Controller
             return $this->redirect($this->getRequest()->getSession()->get('BackURL'));
         }
 
+        // In SAMLHelper, we use RelayState to convey BackURL because in a HTTP POST flow
+        // with lax or strict cookie security the session will not be there for us. RelayState
+        // will be reflected back in the acs POST request.
+        // Note if only assertion is signed, RelayState cannot be trusted. Prevent open relay
+        // as in https://github.com/SAML-Toolkits/php-saml#avoiding-open-redirect-attacks
+        $relayState = $this->owner->getRequest()->postVar('RelayState');
+        if ($relayState && Director::is_site_url($relayState)) {
+            return $this->redirect($relayState);
+        }
+        
         // Spoofing attack, redirect to homepage instead of spoofing url
         if ($this->getRequest()->getSession()->get('BackURL')
             && !Director::is_site_url($this->getRequest()->getSession()->get('BackURL'))) {
