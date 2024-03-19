@@ -156,9 +156,6 @@ class SAMLController extends Controller
 
         $attributes = $auth->getAttributes();
 
-        // Update GUID using information from SAML response
-        $this->extend('updateGuid', $guid, $attributes);
-
         // Allows setups that map GUID (email format) to email {@see SAMLConfiguration::$expose_guid_as_attribute}.
         if (Config::inst()->get(SAMLConfiguration::class, 'expose_guid_as_attribute')) {
             $attributes['GUID'][0] = $guid;
@@ -282,7 +279,7 @@ class SAMLController extends Controller
         if ($relayState && Director::is_site_url($relayState)) {
             return $this->redirect($relayState);
         }
-        
+
         // Spoofing attack, redirect to homepage instead of spoofing url
         if ($this->getRequest()->getSession()->get('BackURL')
             && !Director::is_site_url($this->getRequest()->getSession()->get('BackURL'))) {
