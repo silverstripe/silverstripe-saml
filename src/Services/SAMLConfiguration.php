@@ -3,9 +3,10 @@
 namespace SilverStripe\SAML\Services;
 
 use OneLogin\Saml2\Constants;
-use SilverStripe\Core\Injector\Injectable;
-use SilverStripe\Core\Config\Configurable;
+use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
+use SilverStripe\Core\Config\Configurable;
+use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Injector\Injector;
 
 /**
@@ -27,26 +28,31 @@ class SAMLConfiguration
     use Configurable;
 
     /**
+     * @config
      * @var bool
      */
     private static $strict;
 
     /**
+     * @config
      * @var bool
      */
     private static $debug;
 
     /**
+     * @config
      * @var array
      */
     private static $SP;
 
     /**
+     * @config
      * @var array
      */
     private static $IdP;
 
     /**
+     * @config
      * @var array List of valid AuthN contexts that the IdP can use to authenticate a user. Will be passed to the IdP in
      * every AuthN request (e.g. every login attempt made by a user). The default values should work for ADFS 2.0, but
      * can be overridden if needed.
@@ -99,17 +105,53 @@ class SAMLConfiguration
     private static $login_persistent = false;
 
     /**
+     * Set other base urls (e.g. subdomains) that may also request Authn from the IdP.
+     *
+     * As with the instruction for SP.entityId it must include protocol (which is always https://), but in this case
+     * always include a trailing slash too.
+     *
+     * In a Silverstripe CMS context this could be e.g. language oriented domains (fr.example.org)
+     * or subdomains for the silverstripe/subsites module
+     * or a pathed URL if your site lives in a subdirectory (example.org/website/) which doesn't match the SP entityId
+     *
+     * If not set the IdP will always redirect to the main site ACS url, ending in user confusion in the least.
+     * An infinite loop (automated or manual) when then redirecting to the RelayState (if cookies aren't shared),
+     * or simply being sent to the main site homepage (leaving the subsite inaccessible if SAMLMiddleware is in use)
+     *
+     * Having a setting that allows certain bases to be used gives a more defined behaviour than simply relying on
+     * {@see Director::absoluteBaseURL} directly
+     *
+     * @see SilverStripe\SAML\Middleware\SAMLMiddleware
+     *
+     * @config
+     * @var array
+     */
+    private static $extra_acs_base = [];
+
+    /**
+     * Build the SAML configuration array for use with OneLogin\Saml2\Auth
+     * The use of Injector allows yaml config to refer to environment variables
+     * @see Injector::convertServiceProperty
+     * @see OneLogin\Saml2\Auth
+     *
      * @return array
      */
     public function asArray()
     {
-        $conf = [];
+        $samlConf = [];
 
-        $conf['strict'] = $this->config()->get('strict');
-        $conf['debug'] = $this->config()->get('debug');
+        $config = $this->config();
+
+        $samlConf['strict'] = $config->get('strict');
+        $samlConf['debug'] = $config->get('debug');
 
         // SERVICE PROVIDER SECTION
-        $sp = $this->config()->get('SP');
+        $sp = $config->get('SP');
+
+        $spEntityId = Injector::inst()->convertServiceProperty($sp['entityId']);
+        $extraAcsBaseUrl = (array)$config->get('extra_acs_base');
+        $currentBaseUrl = Director::absoluteBaseURL();
+        $acsBaseUrl = in_array($currentBaseUrl, $extraAcsBaseUrl) ? $currentBaseUrl : $spEntityId;
 
         $spX509Cert = Injector::inst()->convertServiceProperty($sp['x509cert']);
         $spCertPath = Director::is_absolute($spX509Cert)
@@ -120,25 +162,24 @@ class SAMLConfiguration
             ? $spPrivateKey
             : sprintf('%s/%s', BASE_PATH, $spPrivateKey);
 
-        $conf['sp']['entityId'] = Injector::inst()->convertServiceProperty($sp['entityId']);
-        $conf['sp']['assertionConsumerService'] = [
-            'url' => Injector::inst()->convertServiceProperty($sp['entityId']) . '/saml/acs',
+        $samlConf['sp']['entityId'] = $spEntityId;
+        $samlConf['sp']['assertionConsumerService'] = [
+            'url' => Controller::join_links($acsBaseUrl, '/saml/acs'),
             'binding' => Constants::BINDING_HTTP_POST
         ];
-        $conf['sp']['NameIDFormat'] = isset($sp['nameIdFormat']) ?
-            $sp['nameIdFormat'] : Constants::NAMEID_TRANSIENT;
-        $conf['sp']['x509cert'] = file_get_contents($spCertPath);
-        $conf['sp']['privateKey'] = file_get_contents($spKeyPath);
+        $samlConf['sp']['NameIDFormat'] = $sp['nameIdFormat'] ?? Constants::NAMEID_TRANSIENT;
+        $samlConf['sp']['x509cert'] = file_get_contents($spCertPath);
+        $samlConf['sp']['privateKey'] = file_get_contents($spKeyPath);
 
         // IDENTITY PROVIDER SECTION
-        $idp = $this->config()->get('IdP');
-        $conf['idp']['entityId'] = Injector::inst()->convertServiceProperty($idp['entityId']);
-        $conf['idp']['singleSignOnService'] = [
+        $idp = $config->get('IdP');
+        $samlConf['idp']['entityId'] = Injector::inst()->convertServiceProperty($idp['entityId']);
+        $samlConf['idp']['singleSignOnService'] = [
             'url' => Injector::inst()->convertServiceProperty($idp['singleSignOnService']),
             'binding' => Constants::BINDING_HTTP_REDIRECT,
         ];
         if (isset($idp['singleLogoutService'])) {
-            $conf['idp']['singleLogoutService'] = [
+            $samlConf['idp']['singleLogoutService'] = [
                 'url' => Injector::inst()->convertServiceProperty($idp['singleLogoutService']),
                 'binding' => Constants::BINDING_HTTP_REDIRECT,
             ];
@@ -148,14 +189,14 @@ class SAMLConfiguration
         $idpCertPath = Director::is_absolute($idpX509Cert)
             ? $idpX509Cert
             : sprintf('%s/%s', BASE_PATH, $idpX509Cert);
-        $conf['idp']['x509cert'] = file_get_contents($idpCertPath);
+        $samlConf['idp']['x509cert'] = file_get_contents($idpCertPath);
 
         // SECURITY SECTION
-        $security = $this->config()->get('Security');
+        $security = $config->get('Security');
         $signatureAlgorithm = $security['signatureAlgorithm'];
 
-        $authnContexts = $this->config()->get('authn_contexts');
-        $disableAuthnContexts = $this->config()->get('disable_authn_contexts');
+        $authnContexts = $config->get('authn_contexts');
+        $disableAuthnContexts = $config->get('disable_authn_contexts');
 
         if ((bool)$disableAuthnContexts) {
             $authnContexts = false;
@@ -170,7 +211,7 @@ class SAMLConfiguration
             }
         }
 
-        $conf['security'] = [
+        $samlConf['security'] = [
             /** signatures and encryptions offered */
             // Indicates that the nameID of the <samlp:logoutRequest> sent by this SP will be encrypted.
             'nameIdEncrypted' => true,
@@ -214,6 +255,6 @@ class SAMLConfiguration
             'wantXMLValidation' => true,
         ];
 
-        return $conf;
+        return $samlConf;
     }
 }
