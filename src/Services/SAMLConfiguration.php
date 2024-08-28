@@ -93,6 +93,12 @@ class SAMLConfiguration
     private static $additional_get_query_params = [];
 
     /**
+     * @config
+     * @var bool Set a cookie for persistent log-ins when a user logs in.
+     */
+    private static $login_persistent = false;
+
+    /**
      * @return array
      */
     public function asArray()

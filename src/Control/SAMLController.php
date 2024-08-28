@@ -222,7 +222,8 @@ class SAMLController extends Controller
 
         /** @var IdentityStore $identityStore */
         $identityStore = Injector::inst()->get(IdentityStore::class);
-        $identityStore->logIn($member, false, $this->getRequest());
+        $persistent = Config::inst()->get(SAMLConfiguration::class, 'login_persistent');
+        $identityStore->logIn($member, $persistent, $this->getRequest());
 
         return $this->getRedirect();
     }
