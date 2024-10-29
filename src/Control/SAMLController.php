@@ -73,9 +73,12 @@ class SAMLController extends Controller
         $uniqueErrorId = uniqid('SAML-');
 
         // Force php-saml module to use the current absolute base URL (e.g. https://www.example.com/saml). This avoids
-        // errors that we otherwise get when having a multi-directory ACS URL like /saml/acs).
+        // errors that we otherwise get when having a multi-directory ACS  URL (like /saml/acs).
         // See https://github.com/onelogin/php-saml/issues/249
-        Utils::setBaseURL(Controller::join_links($auth->getSettings()->getSPData()['entityId'], 'saml'));
+        Utils::setBaseURL(Controller::join_links(Director::absoluteBaseURL(), 'saml'));
+
+        // Hook point to allow extensions to further modify or unset any of the above base url coersion
+        $this->extend('onBeforeAcs', $uniqueErrorId);
 
         // Attempt to process the SAML response. If there are errors during this, log them and redirect to the generic
         // error page. Note: This does not necessarily include all SAML errors (e.g. we still need to confirm if the
