@@ -1,0 +1,8 @@
+---
+Name: static-error-page
+Only:
+  moduleexists: silverstripe/errorpage
+---
+SilverStripe\ErrorPage\ErrorPage:
+  extensions:
+    - SilverStripe\SAML\Extensions\ErrorPageStaticPublish
