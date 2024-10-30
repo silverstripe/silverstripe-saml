@@ -9,17 +9,16 @@ This guide contains a list of solutions to problems we have encountered in pract
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-
-- ["Invalid issuer" error in SilverStripe](#invalid-issuer-error-in-silverstripe)
+- ["Invalid issuer" error in Silverstripe](#invalid-issuer-error-in-silverstripe)
 - [Updating ADFS from 1.0 to 2.0](#updating-adfs-from-10-to-20)
 - [ADFS 3.0 and Chrome authentication](#adfs-30-and-chrome-authentication)
 - [Intranet level security settings](#intranet-level-security-settings)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-## "Invalid issuer" error in SilverStripe
+## "Invalid issuer" error in Silverstripe
 
-In your SAML configuration file for SilverStripe, `entityId` must match *exactly* to the correct URL (including the protocol).
+In your SAML configuration file for Silverstripe, `entityId` must match *exactly* to the correct URL (including the protocol).
 
 The correct URL can be extracted from ADFS by checking the "Federation Service Properties".
 

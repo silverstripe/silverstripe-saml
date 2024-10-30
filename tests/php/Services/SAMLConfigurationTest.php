@@ -16,7 +16,7 @@ class SAMLConfigurationTest extends SapphireTest
         $config->set(Director::class, 'alternate_base_url', 'https://running.test');
 
         $config->set(SAMLConfiguration::class, 'extra_acs_base', [
-            'https://example.running.test/'
+            'https://example.running.test'
         ]);
 
         $config->set(SAMLConfiguration::class, 'SP', [
@@ -46,12 +46,12 @@ class SAMLConfigurationTest extends SapphireTest
                 'SP.EntityId should be used by default'
             ],
             [
-                'https://example.running.test/',
+                'https://example.running.test',
                 'https://example.running.test/saml/acs',
                 'Extra ACS should work when the loaded (or specified) domain matches'
             ],
             [
-                'https://not-legit.running.test/',
+                'https://not-legit.running.test',
                 'https://running.test/saml/acs',
                 'Unlisted ACS base should result in the SP.EntityId being used instead',
             ],

@@ -1,7 +1,6 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-
 - [Technical notes](#technical-notes)
   - [Interface between SAML and LDAP](#interface-between-saml-and-ldap)
   - [SAML+LDAP sequence](#samlldap-sequence)
@@ -31,7 +30,7 @@ Normal sequence, involving single sign-on and LDAP synchronisation:
 1. User is sent back to `SAMLController::acs`, with an appropriate authentication token
 1. If `Member` record is not found, stub is created with some basic fields (i.e. GUID, name, surname, email), but no group
 mapping.
-1. User is logged into SilverStripe as that member, considered authenticated. GUID is used to uniquely identify that
+1. User is logged into Silverstripe as that member, considered authenticated. GUID is used to uniquely identify that
 user.
 1. A login hook is triggered at `LDAPMemberExtension::memberLoggedIn`
 1. LDAP synchronisation is performed by looking up the GUID. All `Member` fields are overwritten with the data obtained
