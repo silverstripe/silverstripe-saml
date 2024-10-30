@@ -17,12 +17,6 @@ use SilverStripe\Security\Security;
 class SAMLLoginForm extends LoginForm
 {
     /**
-     * This field is used in the "You are logged in as %s" message
-     * @var string
-     */
-    public $loggedInAsField = 'FirstName';
-
-    /**
      * @var string
      */
     protected $authenticator_class = SAMLAuthenticator::class;
