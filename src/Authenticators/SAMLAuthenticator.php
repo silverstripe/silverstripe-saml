@@ -3,15 +3,10 @@
 namespace SilverStripe\SAML\Authenticators;
 
 use SilverStripe\Control\Controller;
-use Silverstripe\Control\Director;
 use SilverStripe\Control\HTTPRequest;
-use SilverStripe\Control\Session;
 use SilverStripe\Core\Config\Config;
-use SilverStripe\Core\Injector\Injector;
-use SilverStripe\Forms\Form;
 use SilverStripe\ORM\ValidationResult;
 use SilverStripe\SAML\Control\SAMLController;
-use SilverStripe\SAML\Helpers\SAMLHelper;
 use SilverStripe\SAML\Middleware\SAMLMiddleware;
 use SilverStripe\Security\Authenticator;
 use SilverStripe\Security\Member;

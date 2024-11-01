@@ -138,7 +138,9 @@ class SAMLController extends Controller
         if (Config::inst()->get(SAMLConfiguration::class, 'expect_binary_nameid')) {
             $decodedNameId = base64_decode($auth->getNameId());
             if (ctype_print($decodedNameId)) {
-                $this->getForm()->sessionMessage('NameID from IdP is not a binary GUID.', ValidationResult::TYPE_ERROR);
+                $errorMessage = "[{$uniqueErrorId}] NameID from IdP is not a binary GUID.";
+                $this->getLogger()->error($errorMessage);
+                $this->getForm()->sessionMessage($errorMessage, ValidationResult::TYPE_ERROR);
                 $this->getRequest()->getSession()->save($this->getRequest());
                 return $this->getRedirect();
             }
@@ -154,7 +156,7 @@ class SAMLController extends Controller
         }
 
         if ($validateGuid && !$helper->validGuid($guid)) {
-            $errorMessage = "Not a valid GUID '{$guid}' received from server.";
+            $errorMessage = "[{$uniqueErrorId}] Not a valid GUID '{$guid}' received from server.";
             $this->getLogger()->error($errorMessage);
             $this->getForm()->sessionMessage($errorMessage, ValidationResult::TYPE_ERROR);
             $this->getRequest()->getSession()->save($this->getRequest());
@@ -173,7 +175,6 @@ class SAMLController extends Controller
 
         $request = $this->getRequest();
         $this->extend('updateRequest', $request);
-        $this->setRequest($request);
 
         $fieldToClaimMap = array_flip(Member::config()->claims_field_mappings);
 
@@ -202,8 +203,9 @@ class SAMLController extends Controller
             if (!isset($attributes[$claim][0])) {
                 $this->getLogger()->warning(
                     sprintf(
-                        'Claim rule \'%s\' configured in SAMLMemberExtension.claims_field_mappings, ' .
-                            'but wasn\'t passed through. Please check IdP claim rules.',
+                        '[%s] Claim rule \'%s\' configured in SAMLMemberExtension.claims_field_mappings, but wasn\'t'
+                            . ' passed through. Please check IdP claim rules.',
+                        $uniqueErrorId,
                         $claim
                     )
                 );
@@ -234,12 +236,13 @@ class SAMLController extends Controller
     }
 
     /**
-     * Generate this SP's metadata. This is needed for intialising the SP-IdP relationship.
+     * Generate this SP's metadata. This is needed for initialising the SP-IdP relationship.
      * IdP is instructed to call us back here to establish the relationship. IdP may also be configured
      * to hit this endpoint periodically during normal operation, to check the SP availability.
      */
     public function metadata()
     {
+        $response = $this->getResponse();
         try {
             /** @var Auth $auth */
             $auth = Injector::inst()->get(SAMLHelper::class)->getSAMLAuth();
@@ -247,18 +250,16 @@ class SAMLController extends Controller
             $metadata = $settings->getSPMetadata();
             $errors = $settings->validateMetadata($metadata);
             if (empty($errors)) {
-                header('Content-Type: text/xml');
-                echo $metadata;
+                $response->addHeader('Content-Type', 'text/xml');
+                $response->setBody($metadata);
             } else {
-                throw new Error(
-                    'Invalid SP metadata: ' . implode(', ', $errors),
-                    Error::METADATA_SP_INVALID
-                );
+                throw new Error('Invalid SP metadata: ' . implode(', ', $errors), Error::METADATA_SP_INVALID);
             }
         } catch (Exception $e) {
             $this->getLogger()->error($e->getMessage());
-            echo $e->getMessage();
+            $this->httpError(500, $e->getMessage());
         }
+        return $response;
     }
 
     /**
@@ -270,7 +271,7 @@ class SAMLController extends Controller
         $back = $this->getRequest()->getSession()->get('BackURL');
 
         if ($back && Director::is_site_url($back)) {
-            return $this->redirect($this->getRequest()->getSession()->get('BackURL'));
+            return $this->redirect($back);
         }
 
         // In SAMLHelper, we use RelayState to convey BackURL because in a HTTP POST flow
@@ -278,7 +279,7 @@ class SAMLController extends Controller
         // will be reflected back in the acs POST request.
         // Note if only assertion is signed, RelayState cannot be trusted. Prevent open relay
         // as in https://github.com/SAML-Toolkits/php-saml#avoiding-open-redirect-attacks
-        $relayState = $this->owner->getRequest()->postVar('RelayState');
+        $relayState = $this->getRequest()->postVar('RelayState');
         if ($relayState && Director::is_site_url($relayState)) {
             return $this->redirect($relayState);
         }
@@ -290,7 +291,7 @@ class SAMLController extends Controller
 
         // If a default login dest has been set, redirect to that.
         if ($dest = Security::config()->default_login_dest) {
-            return $this->redirect(Director::absoluteBaseURL() . $dest);
+            return $this->redirect(Director::absoluteURL($dest));
         }
 
         // fallback to redirect back to home page
@@ -322,7 +323,8 @@ class SAMLController extends Controller
 
         if ($count > 0) {
             // Response found, therefore this is a replay attack - log the error and return false so the user is denied
-            $this->getLogger()->error(sprintf(
+            $logger = $this->getLogger();
+            $logger->error(sprintf(
                 '[%s] SAML replay attack detected! Response ID "%s", expires "%s", client IP "%s"',
                 $uniqueErrorId,
                 $responseId,
@@ -331,16 +333,15 @@ class SAMLController extends Controller
             ));
 
             return true;
-        } else {
-            // No attack detected, log the SAML response
-            $response = new SAMLResponse([
-                'ResponseID' => $responseId,
-                'Expiry' => $expiry
-            ]);
-
-            $response->write();
-            return false;
         }
+        // No attack detected, log the SAML response
+        $response = new SAMLResponse([
+            'ResponseID' => $responseId,
+            'Expiry' => $expiry
+        ]);
+
+        $response->write();
+        return false;
     }
 
     /**
@@ -354,11 +355,11 @@ class SAMLController extends Controller
     }
 
     /**
-     * Gets the login form
+     * Gets the login form so error messages can configured for it in order to be displayed to users
      *
      * @return SAMLLoginForm
      */
-    public function getForm()
+    private function getForm()
     {
         return Injector::inst()->get(SAMLAuthenticator::class)->getLoginHandler($this->Link())->loginForm();
     }
