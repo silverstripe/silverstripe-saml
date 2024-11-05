@@ -36,6 +36,8 @@ use function uniqid;
  */
 class SAMLController extends Controller
 {
+    private static $url_segment = 'saml';
+
     /**
      * @var array
      */
@@ -77,7 +79,7 @@ class SAMLController extends Controller
         // See https://github.com/onelogin/php-saml/issues/249
         Utils::setBaseURL(Controller::join_links(Director::absoluteBaseURL(), 'saml'));
 
-        // Hook point to allow extensions to further modify or unset any of the above base url coersion
+        // Hook point to allow extensions to further modify or unset any of the above base url coercion
         $this->extend('onBeforeAcs', $uniqueErrorId);
 
         // Attempt to process the SAML response. If there are errors during this, log them and redirect to the generic
@@ -358,6 +360,6 @@ class SAMLController extends Controller
      */
     public function getForm()
     {
-        return Injector::inst()->get(SAMLLoginForm::class, false, [$this, SAMLAuthenticator::class, 'LoginForm']);
+        return Injector::inst()->get(SAMLAuthenticator::class)->getLoginHandler($this->Link())->loginForm();
     }
 }
