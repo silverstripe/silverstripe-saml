@@ -1,16 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ruleset name="SilverStripe">
-    <description>CodeSniffer ruleset for SilverStripe coding conventions.</description>
+<ruleset name="SilverstripeSaml">
+    <description>PSR-12 with exceptions for Silverstripe CMS coding conventions used in this SAML module</description>
 
     <file>src</file>
     <file>tests</file>
 
-    <!-- base rules are PSR-2 -->
-    <rule ref="PSR2">
-        <!-- Current exclusions -->
+    <rule ref="PSR12">
+        <!-- Silverstripe convention uses CapitalCase for template targetted methods (see SAMLLoginHandler::Link) -->
         <exclude name="PSR1.Methods.CamelCapsMethodName" />
-        <exclude name="PSR2.Classes.PropertyDeclaration" />
-        <exclude name="Generic.Files.LineLength.TooLong" />
     </rule>
 </ruleset>
-
