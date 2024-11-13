@@ -19,8 +19,6 @@ use SilverStripe\Core\Injector\Injector;
  * how to exchange certificates and which endpoints to use (e.g. see SAMLConfiguration::metadata).
  *
  * https://syncplicity.zendesk.com/hc/en-us/articles/202392814-Single-sign-on-with-ADFS
- *
- * @package activedirectory
  */
 class SAMLConfiguration
 {
@@ -53,11 +51,23 @@ class SAMLConfiguration
 
     /**
      * @config
+     * @var array currently only `signatureAlgorithm` key is supported; see samlsettings yml config block for details
+     */
+    private static $Security;
+
+    /**
+     * @config
      * @var array List of valid AuthN contexts that the IdP can use to authenticate a user. Will be passed to the IdP in
      * every AuthN request (e.g. every login attempt made by a user). The default values should work for ADFS 2.0, but
      * can be overridden if needed.
      */
     private static $authn_contexts;
+
+    /**
+     * @config
+     * @var bool disable AuthnContexts (see config setting above: authn_contexts)
+     */
+    private static $disable_authn_contexts = false;
 
     /**
      * @config
@@ -67,6 +77,12 @@ class SAMLConfiguration
      * Defaults to true to preserve backwards compatibility (ADFS).
      */
     private static $expect_binary_nameid = true;
+
+    /**
+     * @config
+     * @var bool Whether to validate the returned NameId as a GUID (a.k.a. UUID)
+     */
+    private static $validate_nameid_as_guid = true;
 
     /**
      * @config
@@ -140,7 +156,8 @@ class SAMLConfiguration
     {
         $samlConf = [];
 
-        $config = $this->config();
+        $config = self::config();
+        $injector = Injector::inst();
 
         $samlConf['strict'] = $config->get('strict');
         $samlConf['debug'] = $config->get('debug');
@@ -148,16 +165,16 @@ class SAMLConfiguration
         // SERVICE PROVIDER SECTION
         $sp = $config->get('SP');
 
-        $spEntityId = Injector::inst()->convertServiceProperty($sp['entityId']);
+        $spEntityId = $injector->convertServiceProperty($sp['entityId']);
         $extraAcsBaseUrl = (array)$config->get('extra_acs_base');
         $currentBaseUrl = Director::absoluteBaseURL();
         $acsBaseUrl = in_array($currentBaseUrl, $extraAcsBaseUrl) ? $currentBaseUrl : $spEntityId;
 
-        $spX509Cert = Injector::inst()->convertServiceProperty($sp['x509cert']);
+        $spX509Cert = $injector->convertServiceProperty($sp['x509cert']);
         $spCertPath = Director::is_absolute($spX509Cert)
             ? $spX509Cert
             : sprintf('%s/%s', BASE_PATH, $spX509Cert);
-        $spPrivateKey = Injector::inst()->convertServiceProperty($sp['privateKey']);
+        $spPrivateKey = $injector->convertServiceProperty($sp['privateKey']);
         $spKeyPath = Director::is_absolute($spPrivateKey)
             ? $spPrivateKey
             : sprintf('%s/%s', BASE_PATH, $spPrivateKey);
@@ -173,19 +190,19 @@ class SAMLConfiguration
 
         // IDENTITY PROVIDER SECTION
         $idp = $config->get('IdP');
-        $samlConf['idp']['entityId'] = Injector::inst()->convertServiceProperty($idp['entityId']);
+        $samlConf['idp']['entityId'] = $injector->convertServiceProperty($idp['entityId']);
         $samlConf['idp']['singleSignOnService'] = [
-            'url' => Injector::inst()->convertServiceProperty($idp['singleSignOnService']),
+            'url' => $injector->convertServiceProperty($idp['singleSignOnService']),
             'binding' => Constants::BINDING_HTTP_REDIRECT,
         ];
         if (isset($idp['singleLogoutService'])) {
             $samlConf['idp']['singleLogoutService'] = [
-                'url' => Injector::inst()->convertServiceProperty($idp['singleLogoutService']),
+                'url' => $injector->convertServiceProperty($idp['singleLogoutService']),
                 'binding' => Constants::BINDING_HTTP_REDIRECT,
             ];
         }
 
-        $idpX509Cert = Injector::inst()->convertServiceProperty($idp['x509cert']);
+        $idpX509Cert = $injector->convertServiceProperty($idp['x509cert']);
         $idpCertPath = Director::is_absolute($idpX509Cert)
             ? $idpX509Cert
             : sprintf('%s/%s', BASE_PATH, $idpX509Cert);

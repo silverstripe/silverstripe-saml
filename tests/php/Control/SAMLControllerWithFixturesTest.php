@@ -15,6 +15,7 @@ use SilverStripe\Dev\SapphireTest;
 use SilverStripe\ORM\FieldType\DBDatetime;
 use SilverStripe\ORM\ValidationException;
 use SilverStripe\SAML\Control\SAMLController;
+use SilverStripe\SAML\Exceptions\AcsFailure;
 use SilverStripe\SAML\Helpers\SAMLHelper;
 use SilverStripe\SAML\Model\SAMLResponse;
 use SilverStripe\SAML\Services\SAMLConfiguration;
@@ -74,19 +75,18 @@ class SAMLControllerWithFixturesTest extends SapphireTest
         $request = $this->createStub(HTTPRequest::class);
         $request->method('getIP')->willReturn('000.123.456.789');
 
-        $logger = $this->createMock(LoggerInterface::class);
-        $logger->expects($this->once())->method('error')->with(
-            '[uerr] SAML replay attack detected!'
-            . ' Response ID "used", expires "2024-11-01 15:07:33", client IP "000.123.456.789"'
-        );
-        Injector::inst()->registerService($logger, LoggerInterface::class);
-
         $controller = new SAMLController();
         $controller->setRequest($request);
         $reflection = new ReflectionClass(SAMLController::class);
         $method = $reflection->getMethod('checkForReplayAttack');
 
-        $result = $method->invokeArgs($controller, [$auth, 'uerr']);
+        $this->expectException(AcsFailure::class);
+        $this->expectExceptionMessage(
+            'SAML replay attack detected! Response ID "used", expires "2024-11-01 15:07:33", client IP'
+            . ' "000.123.456.789"'
+        );
+
+        $result = $method->invokeArgs($controller, [$auth]);
 
         $this->assertTrue($result);
         $this->assertCount(1, SAMLResponse::get()->filter('ResponseID', 'used'));
@@ -102,10 +102,9 @@ class SAMLControllerWithFixturesTest extends SapphireTest
         $reflection = new ReflectionClass(SAMLController::class);
         $method = $reflection->getMethod('checkForReplayAttack');
 
-        $result = $method->invokeArgs($controller, [$auth]);
+        $method->invokeArgs($controller, [$auth]);
 
-        $this->assertFalse($result);
-        $this->assertCount(1, SAMLResponse::get()->filter('ResponseID', 'current'));
+        $this->assertCount(1, SAMLResponse::get()->filter('ResponseID', 'current'), 'The response ID should be logged');
     }
 
     /**
@@ -245,7 +244,7 @@ class SAMLControllerWithFixturesTest extends SapphireTest
         $guid = '12dollarsAndFiftyCents';
         $controller = $this->configureACS(returns: ['binToStrGuid' => $guid, 'validGuid' => false]);
         $controller->getLogger()->expects($this->once())->method('error')->with(
-            $this->stringEndsWith("Not a valid GUID '12dollarsAndFiftyCents' received from server.")
+            $this->stringEndsWith("Invalid GUID '12dollarsAndFiftyCents' received from IdP")
         );
         $response = $controller->acs();
         $this->assertInstanceOf(HTTPResponse::class, $response);
@@ -258,7 +257,7 @@ class SAMLControllerWithFixturesTest extends SapphireTest
         $guid = base64_encode('all printable characters');
         $controller = $this->configureACS(returns: ['getNameId' => $guid]);
         $controller->getLogger()->expects($this->once())->method('error')->with(
-            $this->stringEndsWith('NameID from IdP is not a binary GUID.')
+            $this->stringEndsWith('NameID from IdP is not a binary GUID')
         );
         $response = $controller->acs();
         $this->assertInstanceOf(HTTPResponse::class, $response);

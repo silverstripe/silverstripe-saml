@@ -88,6 +88,11 @@ class SAMLControllerTest extends SapphireTest
         $session = $this->createStub(Session::class);
         $request->method('getSession')->willReturn($session);
         $session->method('get')->with('BackURL')->willReturn('https://examle.com/another-site');
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->once())->method('alert')->with(
+            'Potential after log in redirect attack via session BackURL: https://examle.com/another-site'
+        );
+        Injector::inst()->registerService($logger, LoggerInterface::class);
         $redirectResponse = $this->invokeMethodOnSAMLController('getRedirect', $request);
         $this->assertSame(302, $redirectResponse->getStatusCode());
         $this->assertSame(self::BASE, $redirectResponse->getHeader('location'));
@@ -95,7 +100,7 @@ class SAMLControllerTest extends SapphireTest
 
     public function testGetRedirectWithSecurityDefault()
     {
-        $logIn = '/default/log-in';
+        $logIn = '/default/logged-in';
         Security::config()->set('default_login_dest', $logIn);
         $redirectResponse = $this->invokeMethodOnSAMLController('getRedirect');
         $this->assertSame(302, $redirectResponse->getStatusCode());
