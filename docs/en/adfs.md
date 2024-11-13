@@ -1,14 +1,13 @@
 # ADFS administrator guide
 
-This guide will step you through the configuration steps needed to integrate with a SilverStripe site by getting ADFS to act as a SAML Identity Provider (IdP).
+This guide will step you through the configuration steps needed to integrate with a Silverstripe site by getting ADFS to act as a SAML Identity Provider (IdP).
 
-As an ADFS administrator, after reading this guide, you should be able to provide federated authentication service to a SilverStripe site using the *silverstripe-saml* module.
+As an ADFS administrator, after reading this guide, you should be able to provide federated authentication service to a Silverstripe site using the *silverstripe-saml* module.
 
 ## Table of contents
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-
 
 - [Overview](#overview)
 - [Make IdP certificate available](#make-idp-certificate-available)
@@ -36,9 +35,9 @@ If you are using a different version of AD or ADFS, this guide will hopefully gi
 
 ## Make IdP certificate available
 
-SilverStripe site needs the IdP certificate to be able to establish the trust relationship.
+Silverstripe site needs the IdP certificate to be able to establish the trust relationship.
 
-If you have access to the web server, install the certificate at a known location and pass the path to the SilverStripe developer for configuration.
+If you have access to the web server, install the certificate at a known location and pass the path to the Silverstripe developer for configuration.
 
 You can get the certificate by either parsing it out from the endpoint `https://<idp-domain>/FederationMetadata/2007-06/FederationMetadata.xml`
 or by exporting the certificate manually using ADFS console on Windows.
@@ -55,7 +54,7 @@ A wizard opens, click "Next" and then choose "Base-64 encoded X.509 (.CER)". Cli
 
 ## Create a new relying party trust
 
-We'll now set up the trust relationship between the SilverStripe site and the IdP.
+We'll now set up the trust relationship between the Silverstripe site and the IdP.
 
 ![](img/create_relying_party.png)
 
@@ -63,7 +62,7 @@ Right click "Relying Party Trusts" and click "Add Relying Party Trust...". Click
 
 ### Select Data Source
 
-Enter the SilverStripe site SAML metadata endpoint: `https://<sp-domain>/saml/metadata` and press "Next".
+Enter the Silverstripe site SAML metadata endpoint: `https://<sp-domain>/saml/metadata` and press "Next".
 
 ![](img/add_metadata_from_endpoint.png)
 
@@ -87,9 +86,9 @@ Right click the relying party and choose "Edit Claim Rules".
 
 ### Rule 1: Send LDAP Attributes
 
-This rule makes arbitrary AD attributes available for SAML authentication. We surface such parameters as "mail" for use as SilverStripe's email, "givenName" and "sn" for identifying the person, and "objectGuid" as a unique identifier.
+This rule makes arbitrary AD attributes available for SAML authentication. We surface such parameters as "mail" for use as Silverstripe's email, "givenName" and "sn" for identifying the person, and "objectGuid" as a unique identifier.
 
-You could expand the list of fields provided, and the *silverstripe-saml* module would be able to utilise these, but it's best to keep SAML payloads small. A better way to accomplish this is via [LDAP integration](https://github.com/silverstripe/silverstripe-ldap) - ask your SilverStripe developer to do that instead.
+You could expand the list of fields provided, and the *silverstripe-saml* module would be able to utilise these, but it's best to keep SAML payloads small. A better way to accomplish this is via [LDAP integration](https://github.com/silverstripe/silverstripe-ldap) - ask your Silverstripe developer to do that instead.
 
 Note that the "privatepersonalidentifier" must be a unique identifier (we will rely on it in "Rule 2"). Here we use "objectGuid".
 

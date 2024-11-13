@@ -1,8 +1,8 @@
 # Developer guide
 
-This guide will step you through configuring your SilverStripe project to function as a SAML 2.0 Service Provider (SP). It will also show you a typical way to synchronise user details and group memberships from LDAP, using the [LDAP module](https://github.com/silverstripe/silverstripe-ldap).
+This guide will step you through configuring your Silverstripe project to function as a SAML 2.0 Service Provider (SP). It will also show you a typical way to synchronise user details and group memberships from LDAP, using the [LDAP module](https://github.com/silverstripe/silverstripe-ldap).
 
-As a SilverStripe developer after reading this guide, you should be able to correctly configure your site to integrate with the Identity Provider (IdP). You will also be able to authorise users based on their AD group memberships, and synchronise their personal details.
+As a Silverstripe developer after reading this guide, you should be able to correctly configure your site to integrate with the Identity Provider (IdP). You will also be able to authorise users based on their AD group memberships, and synchronise their personal details.
 
 We assume ADFS 2.0 or greater is used as an IdP.
 
@@ -10,7 +10,6 @@ We assume ADFS 2.0 or greater is used as an IdP.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-
 
 - [Install the module](#install-the-module)
 - [Make x509 certificates available](#make-x509-certificates-available)
@@ -23,7 +22,7 @@ We assume ADFS 2.0 or greater is used as an IdP.
   - [Additional configuration for Azure AD](#additional-configuration-for-azure-ad)
   - [GUID Transformation](#guid-transformation)
 - [Establish trust](#establish-trust)
-- [Configure SilverStripe Authenticators](#configure-silverstripe-authenticators)
+- [Configure Silverstripe Authenticators](#configure-silverstripe-authenticators)
   - [Show the SAML Login button on login form](#show-the-saml-login-button-on-login-form)
   - [Automatically require SAML login for every request](#automatically-require-saml-login-for-every-request)
 - [Test the connection](#test-the-connection)
@@ -35,6 +34,7 @@ We assume ADFS 2.0 or greater is used as an IdP.
 - [Advanced SAML configuration](#advanced-saml-configuration)
   - [Allow insecure linking-by-email](#allow-insecure-linking-by-email)
   - [Adjust the requested AuthN contexts](#adjust-the-requested-authn-contexts)
+  - [Allow authentication with alternative domains (e.g. subdomains)](#allow-authentication-with-alternative-domains-eg-subdomains)
   - [Create your own SAML configuration for completely custom settings](#create-your-own-saml-configuration-for-completely-custom-settings)
   - [Additional GET Query Params for SAML](#additional-get-query-params-for-saml)
 - [Resources](#resources)
@@ -43,7 +43,7 @@ We assume ADFS 2.0 or greater is used as an IdP.
 
 ## Install the module
 
-First step is to add this module into your SilverStripe project. You can use Composer for this:
+First step is to add this module into your Silverstripe project. You can use Composer for this:
 
 ```
 composer require silverstripe/saml
@@ -53,11 +53,11 @@ Commit the changes.
 
 ## Make x509 certificates available
 
-SAML uses pre-shared certificates for establishing trust between the Service Provider (SP - here, SilverStripe) and the Identity Provider (IdP - here, ADFS).
+SAML uses pre-shared certificates for establishing trust between the Service Provider (SP - here, Silverstripe) and the Identity Provider (IdP - here, ADFS).
 
 ### SP certificate and key
 
-You need to make the SP x509 certificate and private key available to the SilverStripe site to be able to sign SAML requests. The certificate's "Common Name" needs to match the site endpoint that the ADFS will be using.
+You need to make the SP x509 certificate and private key available to the Silverstripe site to be able to sign SAML requests. The certificate's "Common Name" needs to match the site endpoint that the ADFS will be using.
 
 For testing purposes, you can generate this yourself by using the `openssl` command:
 
@@ -69,7 +69,7 @@ Contact your system administrator if you are not sure how to install these.
 
 ### IdP certificate
 
-You also need to make the certificate for your ADFS endpoint available to the SilverStripe site. Talk with your ADFS administrator to find out how to obtain this.
+You also need to make the certificate for your ADFS endpoint available to the Silverstripe site. Talk with your ADFS administrator to find out how to obtain this.
 
 * In you are integrating with ADFS, direct the ADFS administrator to the [ADFS administrator guide](adfs.md).
 * If you are integrating with Azure AD, direct the Azure AD administrator to the [Azure AD administrator guide](azure-ad.md).
@@ -158,9 +158,9 @@ If you prefer to receive the GUID in lower-case or upper-case format you can use
 
 ## Establish trust
 
-At this stage the SilverStripe site trusts the IdP, but the IdP does not have any way to establish the identity of the SilverStripe site.
+At this stage the Silverstripe site trusts the IdP, but the IdP does not have any way to establish the identity of the Silverstripe site.
 
-The IdP should now be configured to extract the SP certificate from SilverStripe's SP endpoint. Once this is completed, bi-directional trust has been established and the authentication should be possible.
+The IdP should now be configured to extract the SP certificate from Silverstripe's SP endpoint. Once this is completed, bi-directional trust has been established and the authentication should be possible.
 
 *silverstripe-saml* has some specific requirements on how ADFS, Azure AD and other IdPs are configured. Consult one of the following guides depending on the IdP you are integrating with.
 
@@ -172,7 +172,7 @@ In particular, most IdPs will require that you provide them with the entity ID a
 * The Entity ID is the URL exactly as you have entered it in the YML above, which should be the URL to the root of your website (e.g. https://example.com)
 * The Reply URL is the Entity ID, with the suffix '/saml/acs' added to the end (e.g. https://example.com/saml/acs)
 
-## Configure SilverStripe Authenticators
+## Configure Silverstripe Authenticators
 
 To be able to use the SAML or the LDAP authenticator you will need to set them up in the `mysite/_config/saml.yml`.
 
@@ -188,7 +188,7 @@ SilverStripe\Core\Injector\Injector:
         default: '%$SilverStripe\SAML\Authenticators\SAMLAuthenticator'
 ```
 
-**Note:** to prevent locking yourself out if using the LDAP module as well, before you remove the "MemberAuthenticator" make sure you map at least one LDAP group to the SilverStripe `Administrator` Security Group. Consult [CMS usage docs](usage.md) for how to do it.
+**Note:** to prevent locking yourself out if using the LDAP module as well, before you remove the "MemberAuthenticator" make sure you map at least one LDAP group to the Silverstripe `Administrator` Security Group. Consult [CMS usage docs](usage.md) for how to do it.
 
 ### Automatically require SAML login for every request
 
@@ -339,6 +339,17 @@ SilverStripe\SAML\Services\SAMLConfiguration:
 ```
 
 You can also set `disable_authn_contexts: true` which will disable the sending of AuthN contexts at all, allowing the remote IdP to make its best decision over what to use. This will also not require an exact match (and is therefore not recommended).
+
+### Allow authentication with alternative domains (e.g. subdomains)
+
+SAML Authentication responses are typically sent to the ACS (reply) url specified to the IdP - e.g. https://example.com/saml/acs - which does not take subdomains or alternative valid domains into account - effectively redirecting someone from sub.example.com to example.com on successful authentication. IdPs often allow for this via configuring other valid reply URLs for the SP. To allow for this within your Silverstripe app, set the `SAMLConfiguration.extra_acs_base` configuration to an array of valid strings. These need to be in the same format as the EntityId - valid URLs WITHOUT a trailing slash (since Silverstripe CMS 5.0).
+
+```yml
+SilverStripe\SAML\Services\SAMLConfiguration:
+  extra_acs_base:
+    - https://app.example.com
+    - https://docs.example.com
+```
 
 ### Create your own SAML configuration for completely custom settings
 

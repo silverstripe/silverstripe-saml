@@ -151,7 +151,6 @@ class SAMLConfiguration
         $spEntityId = Injector::inst()->convertServiceProperty($sp['entityId']);
         $extraAcsBaseUrl = (array)$config->get('extra_acs_base');
         $currentBaseUrl = Director::absoluteBaseURL();
-        $count = count($extraAcsBaseUrl);
         $acsBaseUrl = in_array($currentBaseUrl, $extraAcsBaseUrl) ? $currentBaseUrl : $spEntityId;
 
         $spX509Cert = Injector::inst()->convertServiceProperty($sp['x509cert']);

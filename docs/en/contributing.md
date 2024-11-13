@@ -6,7 +6,6 @@ This document describes additional contribution guidelines that apply to this mo
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-
 - [Documentation](#documentation)
 - [Adding new functionality](#adding-new-functionality)
 - [Adding support for new identity providers (IdPs)](#adding-support-for-new-identity-providers-idps)

@@ -1,7 +1,6 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-
 - [Azure AD administrator guide](#azure-ad-administrator-guide)
   - [Table of contents](#table-of-contents)
   - [Overview](#overview)
@@ -13,7 +12,7 @@
 
 # Azure AD administrator guide
 
-This guide will step you through configuring a new SAML integration in Azure AD, such that Azure AD can act as an Identity Provider (IdP) for a SilverStripe site.
+This guide will step you through configuring a new SAML integration in Azure AD, such that Azure AD can act as an Identity Provider (IdP) for a Silverstripe site.
 
 ## Table of contents
 
