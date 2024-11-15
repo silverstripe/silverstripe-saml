@@ -66,11 +66,7 @@ class SAMLLoginHandler extends RequestHandler
 
     public function loginForm()
     {
-        return SAMLLoginForm::create(
-            $this,
-            get_class($this->authenticator),
-            'LoginForm'
-        );
+        return SAMLLoginForm::create($this, 'LoginForm');
     }
 
     /**
