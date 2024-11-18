@@ -3,9 +3,6 @@
 namespace SilverStripe\SAML\Control;
 
 use Exception;
-
-use function gmmktime;
-
 use OneLogin\Saml2\Auth;
 use OneLogin\Saml2\Constants;
 use OneLogin\Saml2\Utils;
@@ -26,6 +23,7 @@ use SilverStripe\Security\IdentityStore;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Security;
 
+use function gmmktime;
 use function uniqid;
 
 /**

@@ -1,4 +1,5 @@
 <?php
+
 namespace SilverStripe\SAML\Middleware;
 
 use SilverStripe\Control\Controller;
