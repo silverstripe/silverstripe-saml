@@ -2,7 +2,6 @@
 
 namespace SilverStripe\SAML\Middleware;
 
-use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Control\Middleware\HTTPMiddleware;
@@ -50,17 +49,17 @@ class SAMLMiddleware implements HTTPMiddleware
         }
 
         // Check the URL to see if it matches an exclusion rule - if so, stop processing and pass on to other delegates
-        if ($this->checkExcludedUrl($request)) {
+        if ($this->isExcludedUrl($request)) {
             return $delegate($request);
         }
 
-        // Don't redirect on CLI
-        if (Director::is_cli()) {
+        // Don't redirect for exempt execution environments - E.g. CLI
+        if ($this->isExcludedEnvironment()) {
             return $delegate($request);
         }
 
         // If the user is already logged in, stop processing and pass on to other delegates
-        if (Security::getCurrentUser()) {
+        if ($this->isAlreadyAuthenticated()) {
             return $delegate($request);
         }
 
@@ -76,9 +75,9 @@ class SAMLMiddleware implements HTTPMiddleware
      * @param HTTPRequest $request The current request
      * @return bool true if the current URL should be excluded from having this middleware run
      */
-    protected function checkExcludedUrl(HTTPRequest $request)
+    protected function isExcludedUrl(HTTPRequest $request): bool
     {
-        $urls = $this->getExcludedUrls();
+        $urls = $this->getExcludedUrlPatterns();
         $currentRelativeUrl = $request->getURL(true);
 
         foreach ($urls as $pattern) {
@@ -94,16 +93,32 @@ class SAMLMiddleware implements HTTPMiddleware
     /**
      * @return array The list of all excluded URLs
      */
-    protected function getExcludedUrls()
+    protected function getExcludedUrlPatterns(): array
     {
-        return $this->config()->excluded_urls;
+        return (array)$this->config()->excluded_urls;
     }
 
     /**
      * @return bool true if this middleware is enabled, false if it's not enabled
      */
-    protected function isEnabled()
+    protected function isEnabled(): bool
     {
-        return $this->config()->enabled;
+        return (bool)$this->config()->enabled;
+    }
+
+    /**
+     * @return bool Whether to guard this execution environment
+     */
+    protected function isExcludedEnvironment(): bool
+    {
+        return Director::is_cli();
+    }
+
+    /**
+     * @return boolean true if user is already logged in
+     */
+    protected function isAlreadyAuthenticated(): bool
+    {
+        return (bool)Security::getCurrentUser();
     }
 }

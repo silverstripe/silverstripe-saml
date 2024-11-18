@@ -91,50 +91,59 @@ class SAMLHelper
     }
 
     /**
-     * Checks if the string is a valid guid in the format of A98C5A1E-A742-4808-96FA-6F409E799937
-     * Case in-sensitive
+     * Checks if the string is a valid guid
+     *
+     * A GUID is 32 hexadecimal digits with hyphen separators making groups of 8, 4, 4, 4, 12.
+     * E.g. A98C5A1E-A742-4808-96FA-6F409E799937
+     * Check is case in-sensitive
      *
      * @param  string $guid
      * @return bool
      */
-    public function validGuid($guid)
+    #[PURE]
+    public function validGuid(string $guid): bool
     {
-        if (preg_match('/^[A-F0-9]{8}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{12}?$/i', $guid)) {
-            return true;
-        }
-        return false;
+        $hex = '[[:xdigit:]]';
+        return (bool)preg_match("/^$hex{8}(-$hex{4}){3}-$hex{12}$/", $guid);
     }
 
     /**
-     * @param  string $object_guid
+     * Decode a binary GUID (presumably from ADFS)
+     *
+     * A GUID is 32 hexadecimal digits with hyphen separators making segments of 8, 4, 4, 4, 12.
+     * The first three segments are half the digits at 16 (8+4+4), and the last two segments are the second 16 (4+12).
+     * When given a GUID in binary format the first half of digits are grouped by 2, with each group transposing its
+     * digits and presenting themselves in reverse order within their respective segments.
+     * E.g. once deciphered to plain hexadecimal, 1234567890abcdef becomes 78654321-AB90-EFCD-
+     * But the second half are in order so just need a hyphen inserted at the correct spot.
+     *
+     * @param  string $binaryGuid
      * @return string
      */
-    public function binToStrGuid($object_guid)
+    #[PURE]
+    public function binToStrGuid($binaryGuid): string
     {
-        $hex_guid = bin2hex($object_guid);
-        $hex_guid_to_guid_str = '';
-        for ($k = 1; $k <= 4; ++$k) {
-            $hex_guid_to_guid_str .= substr($hex_guid, 8 - 2 * $k, 2);
+        $hexGuid = bin2hex($binaryGuid);
+        $stringGuid = '';
+        $segmentStart = 0;
+        foreach ([8, 4, 4] as $segmentSize) {
+            $segmentStart += $segmentSize;
+            $steps = $segmentSize / 2;
+            for ($k = 1; $k <= $steps; $k++) {
+                $stringGuid .= substr($hexGuid, $segmentStart - 2 * $k, 2);
+            }
+            $stringGuid .= '-';
         }
-        $hex_guid_to_guid_str .= '-';
-        for ($k = 1; $k <= 2; ++$k) {
-            $hex_guid_to_guid_str .= substr($hex_guid, 12 - 2 * $k, 2);
-        }
-        $hex_guid_to_guid_str .= '-';
-        for ($k = 1; $k <= 2; ++$k) {
-            $hex_guid_to_guid_str .= substr($hex_guid, 16 - 2 * $k, 2);
-        }
-        $hex_guid_to_guid_str .= '-' . substr($hex_guid, 16, 4);
-        $hex_guid_to_guid_str .= '-' . substr($hex_guid, 20, 12);
-        return strtoupper($hex_guid_to_guid_str);
+        $stringGuid .= substr($hexGuid, 16, 4) . '-' . substr($hexGuid, 20, 12);
+        return strtoupper($stringGuid);
     }
 
     /**
      * @return string[]
      */
-    private function getAdditionalGETQueryParameters()
+    private function getAdditionalGETQueryParameters(): array
     {
-        $additionalGetQueryParams = $this->SAMLConfService->config()->get('additional_get_query_params');
+        $additionalGetQueryParams = SAMLConfiguration::config()->get('additional_get_query_params');
         if (!is_array($additionalGetQueryParams)) {
             $additionalGetQueryParams = [];
         }

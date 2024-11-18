@@ -10,8 +10,6 @@ use SilverStripe\ORM\DataExtension;
  * Class SAMLMemberExtension
  *
  * Adds mappings from IdP claim rules to SilverStripe {@link Member} fields.
- *
- * @package activedirectory
  */
 class SAMLMemberExtension extends DataExtension
 {
@@ -26,7 +24,7 @@ class SAMLMemberExtension extends DataExtension
     ];
 
     /**
-     * These are used by {@link SAMLController} to map specific IdP claim rules
+     * These are used by {@see SAMLController::acs} to map specific IdP claim rules
      * to {@link Member} fields. Availability of these claim rules are defined
      * on the IdP.
      *
