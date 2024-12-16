@@ -17,15 +17,9 @@ use SilverStripe\Security\Security;
 class SAMLLoginForm extends LoginForm
 {
     /**
-     * This field is used in the "You are logged in as %s" message
      * @var string
      */
-    public $loggedInAsField = 'FirstName';
-
-    /**
-     * @var string
-     */
-    protected $authenticator_class = SAMLAuthenticator::class;
+    protected $authenticatorClass = SAMLAuthenticator::class;
 
     /**
      * The name of this login form, to display in the frontend
@@ -42,52 +36,39 @@ class SAMLLoginForm extends LoginForm
      * Constructor
      *
      * @param RequestHandler $controller
-     * @param string $authenticatorClass @deprecated this argument is not used, can be removed in next major release
      * @param string $name method on the $controller
      */
-    public function __construct(RequestHandler $controller, $authenticatorClass, $name)
+    public function __construct(RequestHandler $controller, $name)
     {
-        $backURL = $this->getSession()->get('BackURL');
+        $fields = $this->getFormFields();
+        $actions = $this->getFormActions();
 
-        if (!empty($this->getRequest()->requestVar('BackURL'))) {
-            $backURL = $this->getRequest()->requestVar('BackURL');
-        }
-        if ($this->shouldShowLogoutFields()) {
-            $fields = FieldList::create([
-                HiddenField::create('AuthenticationMethod', null, $this->authenticator_class, $this)
-            ]);
-            $actions = FieldList::create([
-                FormAction::create(
-                    'logout',
-                    _t('SilverStripe\\Security\\Member.BUTTONLOGINOTHER', 'Log in as someone else')
-                )
-            ]);
-        } else {
-            $fields = $this->getFormFields();
-            $actions = $this->getFormActions();
-        }
-
+        $request = $this->getRequest();
+        $backURL = $request->requestVar('BackURL') ?: $request->getSession()->get('BackURL');
         if ($backURL) {
             $fields->push(HiddenField::create('BackURL', 'BackURL', $backURL));
         }
 
         $this->setFormMethod('POST', true);
 
+        if ($this->shouldShowLogoutFields()) {
+            $this->setFormAction(Security::logout_url());
+        }
+
         parent::__construct($controller, $name, $fields, $actions);
     }
 
     protected function getFormFields()
     {
-        return FieldList::create([
-            HiddenField::create('AuthenticationMethod', null, $this->authenticator_class, $this)
-        ]);
+        return FieldList::create();
     }
 
     protected function getFormActions()
     {
-        return FieldList::create([
-            FormAction::create('dologin', _t('SilverStripe\\Security\\Member.BUTTONLOGIN', 'Log in'))
-        ]);
+        $actionDetails = $this->shouldShowLogoutFields()
+            ? ['logout', _t('SilverStripe\\Security\\Member.BUTTONLOGINOTHER', 'Log in as someone else')]
+            : ['doLogin', _t('SilverStripe\\Security\\Member.BUTTONLOGIN', 'Log in')];
+        return FieldList::create([FormAction::create(...$actionDetails)]);
     }
 
     /**
@@ -95,9 +76,6 @@ class SAMLLoginForm extends LoginForm
      */
     protected function shouldShowLogoutFields()
     {
-        if (!Security::getCurrentUser()) {
-            return false;
-        }
-        return true;
+        return (bool)Security::getCurrentUser();
     }
 }

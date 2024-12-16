@@ -1,0 +1,16 @@
+SilverStripe\Security\Member:
+  someone:
+    FirstName: Some
+    Surname: One
+    Email: Some.One@test.test
+    GUID: 12345678-0987-asdf-12345678asdf
+    Locale: mi_NZ
+  existing:
+    Email: existing@account.test
+SilverStripe\SAML\Model\SAMLResponse:
+  test:
+    ResponseID: used
+    Expiry: '2098-12-31 11:59:59'
+  expired:
+    ResponseID: old
+    Expiry: '2022-12-31 11:59:59'
