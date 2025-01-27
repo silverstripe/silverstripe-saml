@@ -36,7 +36,11 @@
     },
     "autoload": {
         "psr-4": {
-            "SilverStripe\\SAML\\": "src/",
+            "SilverStripe\\SAML\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
             "SilverStripe\\SAML\\Tests\\": "tests/php/"
         }
     },

@@ -127,8 +127,7 @@ class SAMLConfigurationTest extends SapphireTest
         );
         $this->assertArrayNotHasKey('singleLogoutService', $output['idp']);
 
-        foreach (
-            [
+        foreach ([
                 'nameIdEncrypted',
                 'authnRequestsSigned',
                 'logoutRequestSigned',

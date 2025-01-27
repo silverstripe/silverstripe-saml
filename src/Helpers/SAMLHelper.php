@@ -40,7 +40,7 @@ class SAMLHelper
     /**
      * @return Auth
      */
-    public function getSAMLauth()
+    public function getSAMLauth(): Auth
     {
         $samlConfig = $this->SAMLConfService->asArray();
         return new Auth($samlConfig);
