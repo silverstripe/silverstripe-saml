@@ -96,7 +96,7 @@ class SAMLLoginHandler extends RequestHandler
      */
     public function doLogin($data, SAMLLoginForm $form, HTTPRequest $request)
     {
-        $backURL = (isset($data['BackURL']) ? $data['BackURL'] : null);
+        $backURL = $data['BackURL'] ?? $this->Link();
         $this->helper->redirect($this, $request, $backURL);
     }
 
