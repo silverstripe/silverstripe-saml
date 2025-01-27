@@ -151,6 +151,22 @@ SilverStripe\SAML\Extensions\SAMLMemberExtension:
     'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name': 'Email'
 ```
 
+### User groups mapping
+
+By default, any new users logged in using SSO will not have any groups assigned to them. If you want them to have want to bring over the groups from the Provider via claims field, you could enable it via
+
+```yml
+SilverStripe\SAML\Services\SAMLConfiguration:
+  map_user_group: true
+```
+
+and specify the claims field to map
+
+```yml
+SilverStripe\SAML\Helpers\SAMLUserGroupMapper:
+  group_claims_field: 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/groups'
+```
+
 ### GUID Transformation
 
 If you prefer to receive the GUID in lower-case or upper-case format you can use the
@@ -402,6 +418,14 @@ SilverStripe\SAML\Services\SAMLConfiguration:
 
 this configuration allows you to add two GET query parameters to endpoint request URL:
 `https://your-idp.com/singleSignOnService/saml2?someGetQueryParameter=value&AnotherParameter=differentValue&SAMLRequest=XYZ....`
+
+### Automatically redirect after authentication
+If the user has CMS permission and you want to redirect to the CMS after successful authentication, you can set the default login destination like this:
+
+```yaml
+SilverStripe\Security\Security:
+  default_login_dest: 'admin'
+```
 
 ## Resources
 

@@ -1,0 +1,18 @@
+SilverStripe\Security\Group:
+  branch_finder:
+    Title: Branch Finder
+  manual_group:
+    Title: Manual group
+
+SilverStripe\Security\Member:
+  member_1:
+    FirstName: John
+    Surname: Adams
+    Email: john.adams@test.test
+  member_2:
+    FirstName: Jane
+    Surname: Smith
+    Email: jane.smith@test.test
+    Groups:
+      - =>SilverStripe\Security\Group.manual_group
+      - =>SilverStripe\Security\Group.branch_finder
