@@ -145,6 +145,12 @@ class SAMLConfiguration
     private static $extra_acs_base = [];
 
     /**
+     * @config
+     * @var bool Whether to map groups to assign the member to from a SAML claim.
+     */
+    private static $map_user_group = false;
+
+    /**
      * Build the SAML configuration array for use with OneLogin\Saml2\Auth
      * The use of Injector allows yaml config to refer to environment variables
      * @see Injector::convertServiceProperty

@@ -75,7 +75,7 @@ class SAMLHelper
         $additionalGetQueryParams = $this->getAdditionalGETQueryParameters();
 
         try {
-            // Use RelayState to convey BackURL (will be handled in SAMLController).
+            /** Use RelayState to convey BackURL (will be handled in {@see SAMLController}). */
             $auth->login($backURL, $additionalGetQueryParams);
         } catch (Exception $e) {
             /** @var LoggerInterface $logger */
