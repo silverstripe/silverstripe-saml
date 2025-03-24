@@ -1,6 +1,6 @@
 SilverStripe\Security\Group:
   branch_finder:
-    Title: Branch Finder
+    Title: Branch finder
   manual_group:
     Title: Manual group
 

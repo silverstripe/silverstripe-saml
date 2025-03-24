@@ -2,6 +2,7 @@
 
 namespace SilverStripe\SAML\Helpers;
 
+use OneLogin\Saml2\Auth;
 use Psr\Log\LoggerInterface;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injectable;
@@ -24,6 +25,8 @@ class SAMLUserGroupMapper
     /**
      * Defines the mapping between the group defined on IdP and the CMS.
      *
+     * A mapping of IdP group identifier (of some form - GUID/UUID/ObjectId, Title, etc.) => Silverstripe Group Title
+     *
      * Note: Groups should be defined on both group_map config and IdP (Azure) before a member can be added. If a
      * group is defined only on Azure, the group will not be created or the member added.
      */
@@ -35,101 +38,62 @@ class SAMLUserGroupMapper
     private static bool $allow_manual_group = false;
 
     /**
-     * Check if group claims field is set and assigns member to group
+     * Check if group claims field is set and assigns member to configured groups
      *
-     * @param [] $attributes
+     * @param Auth $auth
      * @param Member $member
+     * @param string $errorId
      * @return Member
      */
-    public function map($attributes, $member): Member
+    public function map(Auth $auth, Member $member, string $errorId): Member
     {
+        $config = $this->config();
         $logger = Injector::inst()->get(LoggerInterface::class);
-        $groupClaimsField = $this->config()->get('group_claims_field');
-        $groupMap = $this->config()->get('group_map');
+        $groupClaimsField = $config->get('group_claims_field') ?? '';
+        $groupMap = $config->get('group_map') ?? [];
+        $groupTitles = array_values($groupMap);
 
-        $logger->info(sprintf('IdP Attributes: %s', json_encode($attributes, JSON_THROW_ON_ERROR)));
+        // Create groups that don't exist
+        $groups = Group::get()->filter('Title', $groupTitles);
+        foreach (array_diff($groupTitles, $groups->column('Title')) as $missingGroup) {
+            Group::create()->update(['Title' => $missingGroup])->write();
+        }
 
         // Check if group mapping config exists
-        if (count($groupMap) <= 0) {
+        if (empty($groupMap) || empty($groupClaimsField)) {
+            $logger->error("[$errorId] Member group assignment is enabled, but the mapping configuration is missing");
             return $member;
         }
 
         // Remove member from any group (except if manual group is allowed) before syncing
-        if ($this->config()->get('allow_manual_group')) {
-            $this->removeMemberFromGroups($member, true);
-        } else {
-            $this->removeMemberFromGroups($member);
+        $memberGroups = $member->Groups();
+        if ((bool)$config->get('allow_manual_group')) {
+            $memberGroups = $memberGroups->filter('Title', $groupTitles);
         }
+        $memberGroups->removeAll();
 
         // Get groups from SAML response
-        if (!array_key_exists($groupClaimsField, $attributes)) {
+        $claimedGroups = $auth->getAttribute($groupClaimsField);
+        if (is_null($claimedGroups)) {
+            $logger->error("[$errorId] Group claim info missing from SAML response");
+            return $member;
+        }
+        if (!is_array($claimedGroups)) {
+            $logger->error("[$errorId] Group claim info from SAML response in unexpected format");
             return $member;
         }
 
-        $groups = $attributes[$groupClaimsField];
-
-        // Check that group claims field has sent through from provider
-        if (!isset($groups)) {
-            return $member;
+        $configuredGroups = array_keys($groupMap);
+        $invalidGroups = array_diff($claimedGroups, $configuredGroups);
+        if (!empty($invalidGroups)) {
+            $logger->warning("[$errorId] SAML response lists groups not in map: " . implode(', ', $invalidGroups));
         }
 
-        foreach ($groups as $groupID) {
-            // Check that group is a valid group with group map
-            if (!array_key_exists($groupID, $groupMap)) {
-                continue;
-            }
-            $groupTitle = $groupMap[$groupID];
-
-            // Get Group object by Title
-            $group = DataObject::get_one(Group::class, [
-                '"Group"."Title"' => $groupTitle
-            ]);
-
-            // Create group if it doesn't exist yet
-            if (!$group) {
-                $group = new Group();
-                $group->Title = $groupTitle;
-                $group->write();
-            }
-
-            // Add member to the group
-            $group->Members()->add($member);
+        $assignedGroups = array_values(array_intersect_key($groupMap, array_flip($claimedGroups)));
+        foreach (Group::get()->filter('Title', $assignedGroups) as $group) {
+            $memberGroups->add($group);
         }
 
         return $member;
-    }
-
-    /**
-     * Remove the member from current CMS groups except for manual override
-     */
-    protected function removeMemberFromGroups(Member &$member, bool $allowManualGroup = false)
-    {
-        if (!$member) {
-            return false;
-        }
-
-        // Remove all groups associated with this member
-        if (!$allowManualGroup) {
-            $member->Groups()->removeAll();
-            return false;
-        }
-
-        $groupMap = $this->config()->get('group_map');
-
-        // Check if group mapping exists
-        if (count($groupMap) <= 0) {
-            return false;
-        }
-
-        // loop through defined group map and remove member
-        foreach ($groupMap as $id => $groupTitle) {
-            $group = $group = DataObject::get_one(Group::class, [
-                '"Group"."Title"' => $groupTitle
-            ]);
-
-            if ($group) {
-                $group->Members()->removeByID($member->ID);
-            }
-        }
     }
 }

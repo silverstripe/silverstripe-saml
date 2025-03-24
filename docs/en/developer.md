@@ -153,19 +153,29 @@ SilverStripe\SAML\Extensions\SAMLMemberExtension:
 
 ### User groups mapping
 
-By default, any new users logged in using SSO will not have any groups assigned to them. If you want them to have want to bring over the groups from the Provider via claims field, you could enable it via
+By default, any new users logged in using SSO will not have any groups assigned to them. If you want them to have want to bring over the groups from the Provider via claims field, you could enable it via three configuration settings (all required):
+
+- `SilverStripe\SAML\Services\SAMLConfiguration.map_user_group` (bool): A "master switch" to enable or disable the feature
+- `SilverStripe\SAML\Helpers\SAMLUserGroupMapper.group_claims_field` (string): Which claim to source the group membership details from
+- `SilverStripe\SAML\Helpers\SAMLUserGroupMapper.group_map` (array): A list of IdP groups to existing Silverstripe CMS groups for assignment purposes - allowing for pre-set privilege management
 
 ```yml
 SilverStripe\SAML\Services\SAMLConfiguration:
   map_user_group: true
-```
-
-and specify the claims field to map
-
-```yml
 SilverStripe\SAML\Helpers\SAMLUserGroupMapper:
   group_claims_field: 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/groups'
+  group_map:
+    '12345678-90ab-cdef-0123456789ab': 'Administrators'
 ```
+
+Groups for members who authenticate via SAML can be set to be managed entirely by the IdP - all groups will be removed on log in, excepting for the ones the IdP defines via the claim.
+This can be controlled via the `SilverStripe\SAML\Helpers\SAMLUserGroupMapper.allow_manual_group` configuration value, which accepts a boolean: `False` for IdP management, or `true` to allow CMS administrators to assign groups they manage within the CMS (including other IdP associated groups).
+```yml
+SilverStripe\SAML\Helpers\SAMLUserGroupMapper:
+  allow_manual_group: true
+```
+
+**Note:** The `allow_manual_group: false` setting does not prevent user privilege alteration or escalation _within a session_ - groups are only set by the SAML module on log in. Nor does this setting affect group management of members who authenticate via a different method (if available) - E.g. default admin (a "break glass" feature via the default `MemberAuthenticator`).
 
 ### GUID Transformation
 
@@ -203,6 +213,8 @@ SilverStripe\Core\Injector\Injector:
       Authenticators:
         default: '%$SilverStripe\SAML\Authenticators\SAMLAuthenticator'
 ```
+
+The title of the button can be altered via the configuration property `SilverStripe\SAML\Authenticators\SAMLLoginForm.title` for single language sites, or the language file `SilverStripe\SAML\Authenticators\SAMLLoginForm.AUTHENTICATORNAME` entry for multilingual sites.
 
 **Note:** to prevent locking yourself out if using the LDAP module as well, before you remove the "MemberAuthenticator" make sure you map at least one LDAP group to the Silverstripe `Administrator` Security Group. Consult [CMS usage docs](usage.md) for how to do it.
 

@@ -110,7 +110,7 @@ class SAMLController extends Controller
             $member = $this->findOrCreateMember($guid, $claims['Email'] ?? null);
 
             if ($this->configuration->get('map_user_group')) {
-                SAMLUserGroupMapper::singleton()->map($auth->getAttributes(), $member);
+                SAMLUserGroupMapper::singleton()->map($auth, $member, $uniqueErrorId);
             }
 
             // Write a member with basic fields on every login, so that we at least have something if there is no
