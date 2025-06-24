@@ -2,16 +2,16 @@
 
 namespace SilverStripe\SAML\Extensions;
 
+use SilverStripe\Core\Extension;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\ReadonlyField;
-use SilverStripe\ORM\DataExtension;
 
 /**
  * Class SAMLMemberExtension
  *
  * Adds mappings from IdP claim rules to SilverStripe {@link Member} fields.
  */
-class SAMLMemberExtension extends DataExtension
+class SAMLMemberExtension extends Extension
 {
     /**
      * @var array

@@ -14,8 +14,8 @@ use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Config\Config_ForClass;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Core\Validation\ValidationResult;
 use SilverStripe\ORM\Filters\ExactMatchFilter;
-use SilverStripe\ORM\ValidationResult;
 use SilverStripe\SAML\Authenticators\SAMLAuthenticator;
 use SilverStripe\SAML\Authenticators\SAMLLoginForm;
 use SilverStripe\SAML\Exceptions\AcsFailure;
@@ -194,7 +194,10 @@ class SAMLController extends Controller
             ));
         }
         // No attack detected, log the SAML response
-        SAMLResponse::create()->update(['ResponseID' => $responseId, 'Expiry' => $expiry])->write();
+        SAMLResponse::create()->update([
+            'ResponseID' => (string)$responseId,
+            'Expiry' => (string)$expiry
+        ])->write();
     }
 
     private function extractNameId(Auth $auth): string

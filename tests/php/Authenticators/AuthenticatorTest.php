@@ -4,7 +4,7 @@ namespace SilverStripe\SAML\Tests\Authenticators;
 
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Dev\SapphireTest;
-use SilverStripe\ORM\ValidationResult;
+use SilverStripe\Core\Validation\ValidationResult;
 use SilverStripe\SAML\Authenticators\SAMLAuthenticator;
 use SilverStripe\SAML\Authenticators\SAMLLoginHandler;
 use SilverStripe\Security\Authenticator;
