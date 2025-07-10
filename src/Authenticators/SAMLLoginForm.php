@@ -17,6 +17,19 @@ use SilverStripe\Security\Security;
 class SAMLLoginForm extends LoginForm
 {
     /**
+     * Convenience config property to set the default log in form template's title for this form.
+     *
+     * The name is translated so can be affected by project language files, but for single language sites a simple
+     * config setting is more convenient. Language files will override this setting - it is a fallback/default.
+     *
+     * @see getAuthenticatorName
+     *
+     * @config
+     * @var string
+     */
+    private static $title = 'SAML';
+
+    /**
      * @var string
      */
     protected $authenticatorClass = SAMLAuthenticator::class;
@@ -29,7 +42,7 @@ class SAMLLoginForm extends LoginForm
      */
     public function getAuthenticatorName()
     {
-        return _t(__CLASS__ . '.AUTHENTICATORNAME', 'SAML');
+        return _t(__CLASS__ . '.AUTHENTICATORNAME', (string)self::config()->get('title') ?: 'SAML');
     }
 
     /**
