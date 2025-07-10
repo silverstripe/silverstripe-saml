@@ -2,10 +2,10 @@
 
 namespace SilverStripe\SAML\Extensions;
 
-use SilverStripe\ORM\DataExtension;
+use SilverStripe\Core\Extension;
 use SilverStripe\SAML\Middleware\SAMLMiddleware;
 
-class ErrorPageStaticPublish extends DataExtension
+class ErrorPageStaticPublish extends Extension
 {
     private ?bool $originallyEnabled = null;
 

@@ -5,7 +5,7 @@ namespace SilverStripe\SAML\Authenticators;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Core\Config\Config;
-use SilverStripe\ORM\ValidationResult;
+use SilverStripe\Core\Validation\ValidationResult;
 use SilverStripe\SAML\Control\SAMLController;
 use SilverStripe\SAML\Middleware\SAMLMiddleware;
 use SilverStripe\Security\Authenticator;
