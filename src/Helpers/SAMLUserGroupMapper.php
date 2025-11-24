@@ -91,7 +91,7 @@ class SAMLUserGroupMapper
 
         $assignedGroups = array_values(array_intersect_key($groupMap, array_flip($claimedGroups)));
         foreach (Group::get()->filter('Title', $assignedGroups) as $group) {
-            $memberGroups->add($group);
+            $group->DirectMembers()->add($member);
         }
 
         return $member;
