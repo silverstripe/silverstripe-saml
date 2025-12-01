@@ -109,6 +109,8 @@ class SAMLController extends Controller
 
             $member = $this->findOrCreateMember($guid, $claims['Email'] ?? null);
 
+            // Map IdP supplied group claims to Silverstripe CMS groups, if enabled (disabled by default)
+            // This is a more complex task than mapping claims (`mapAttributes()` above), so has its own helper class.
             if ($this->configuration->get('map_user_group')) {
                 SAMLUserGroupMapper::singleton()->map($auth, $member, $uniqueErrorId);
             }

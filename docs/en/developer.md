@@ -153,11 +153,11 @@ SilverStripe\SAML\Extensions\SAMLMemberExtension:
 
 ### User groups mapping
 
-By default, any new users logged in using SSO will not have any groups assigned to them. If you want them to have want to bring over the groups from the Provider via claims field, you could enable it via three configuration settings (all required):
+By default, any new users logged in using SSO will not have any groups assigned to them. If you want them to bring over their groups from the Identity Provider via a SAML attribute (claims) field, you can enable it via three configuration settings (all required):
 
 - `SilverStripe\SAML\Services\SAMLConfiguration.map_user_group` (bool): A "master switch" to enable or disable the feature
 - `SilverStripe\SAML\Helpers\SAMLUserGroupMapper.group_claims_field` (string): Which claim to source the group membership details from
-- `SilverStripe\SAML\Helpers\SAMLUserGroupMapper.group_map` (array): A list of IdP groups to existing Silverstripe CMS groups for assignment purposes - allowing for pre-set privilege management
+- `SilverStripe\SAML\Helpers\SAMLUserGroupMapper.group_map` (array): A list of IdP group identifiers (e.g. GUIDs) to existing Silverstripe CMS groups for assignment purposes - allowing for privilege management via the IdP
 
 ```yml
 SilverStripe\SAML\Services\SAMLConfiguration:

@@ -27,15 +27,20 @@ class SAMLUserGroupMapper
      *
      * A mapping of IdP group identifier (of some form - GUID/UUID/ObjectId, Title, etc.) => Silverstripe Group Title
      *
-     * Note: Groups should be defined on both group_map config and IdP (Azure) before a member can be added. If a
-     * group is defined only on Azure, the group will not be created or the member added.
+     * Note: Groups should be defined on both `group_map` config and IdP before a member can be added. If a group is
+     * defined only by the IdP, the group will not be created; thus the member not assigned to it, even if it exists via
+     * manual creation by an Administrator with an identical name to a group in the IdP.
      */
     private static array $group_map = [];
 
     /**
-     * Allow addition of member to a manually-created group which does not exist on IdP
+     * Allows members to persistently belong to a manually-created group which does not exist on IdP
+     * I.e. groups that are not listed in the `group_map` config setting for this class.
+     *
+     * The behaviour _when false_ is to reset assignments and assign *only* those identified both by the IdP AND listed
+     * in the `group_map` setting when starting a new authenticated session (log in).
      */
-    private static bool $allow_manual_group = false;
+    private static bool $allow_manual_group = true;
 
     /**
      * Check if group claims field is set and assigns member to configured groups
@@ -65,7 +70,8 @@ class SAMLUserGroupMapper
             return $member;
         }
 
-        // Remove member from any group (except if manual group is allowed) before syncing
+        // Ensure members are not in groups they shouldn't be. Membership is reset for ALL groups, unless
+        // `allow_manual_group` is true, then only IdP synced groups are removed (as defined by `group_map`).
         $memberGroups = $member->Groups();
         if ((bool)$config->get('allow_manual_group')) {
             $memberGroups = $memberGroups->filter('Title', $groupTitles);
@@ -86,7 +92,10 @@ class SAMLUserGroupMapper
         $configuredGroups = array_keys($groupMap);
         $invalidGroups = array_diff($claimedGroups, $configuredGroups);
         if (!empty($invalidGroups)) {
-            $logger->warning("[$errorId] SAML response lists groups not in map: " . implode(', ', $invalidGroups));
+            $logger->warning(
+                "[$errorId] SAML response contains unknown groups (perhaps they need adding to the `group_map`?): "
+                . implode(', ', $invalidGroups)
+            );
         }
 
         $assignedGroups = array_values(array_intersect_key($groupMap, array_flip($claimedGroups)));
