@@ -51,7 +51,7 @@ class SAMLConfiguration
 
     /**
      * @config
-     * @var array currently only `signatureAlgorithm` key is supported; see samlsettings yml config block for details
+     * @var array all keys supported except `requestedAuthnContext` (see AuthnContexts) ; see saml.yml config block for details
      */
     private static $Security;
 
@@ -210,7 +210,16 @@ class SAMLConfiguration
 
         // SECURITY SECTION
         $security = $config->get('Security');
+        $nameIdEncrypted = $security['nameIdEncrypted'];
+        $authnRequestsSigned = $security['authnRequestsSigned'];
+        $logoutRequestSigned = $security['logoutRequestSigned'];
+        $logoutResponseSigned = $security['logoutResponseSigned'];
+        $signMetadata = $security['signMetadata'];
+        $wantMessagesSigned = $security['wantMessagesSigned'];
+        $wantAssertionsSigned = $security['wantAssertionsSigned'];
+        $wantNameIdEncrypted = $security['wantNameIdEncrypted'];
         $signatureAlgorithm = $security['signatureAlgorithm'];
+        $wantXMLValidation = $security['wantXMLValidation'];
 
         $authnContexts = $config->get('authn_contexts');
         $disableAuthnContexts = $config->get('disable_authn_contexts');
@@ -231,25 +240,25 @@ class SAMLConfiguration
         $samlConf['security'] = [
             /** signatures and encryptions offered */
             // Indicates that the nameID of the <samlp:logoutRequest> sent by this SP will be encrypted.
-            'nameIdEncrypted' => true,
+            'nameIdEncrypted' => $nameIdEncrypted,
             // Indicates whether the <samlp:AuthnRequest> messages sent by this SP will be signed. [Metadata of the
             // SP will offer this info]
-            'authnRequestsSigned' => true,
+            'authnRequestsSigned' => $authnRequestsSigned,
             // Indicates whether the <samlp:logoutRequest> messages sent by this SP will be signed.
-            'logoutRequestSigned' => true,
+            'logoutRequestSigned' => $logoutRequestSigned,
             // Indicates whether the <samlp:logoutResponse> messages sent by this SP will be signed.
-            'logoutResponseSigned' => true,
-            'signMetadata' => false,
+            'logoutResponseSigned' => $logoutResponseSigned,
+            'signMetadata' => $signMetadata,
             /** signatures and encryptions required **/
             // Indicates a requirement for the <samlp:Response>, <samlp:LogoutRequest>
             // and <samlp:LogoutResponse> elements received by this SP to be signed.
-            'wantMessagesSigned' => false,
+            'wantMessagesSigned' => $wantMessagesSigned,
             // Indicates a requirement for the <saml:Assertion> elements received by
             // this SP to be signed. [Metadata of the SP will offer this info]
-            'wantAssertionsSigned' => true,
+            'wantAssertionsSigned' => $wantAssertionsSigned,
             // Indicates a requirement for the NameID received by
             // this SP to be encrypted.
-            'wantNameIdEncrypted' => false,
+            'wantNameIdEncrypted' => $wantNameIdEncrypted,
 
             // Algorithm that the toolkit will use on signing process. Options:
             //  - 'http://www.w3.org/2000/09/xmldsig#rsa-sha1'
@@ -269,7 +278,7 @@ class SAMLConfiguration
 
             // Indicates if the SP will validate all received xmls.
             // (In order to validate the xml, 'strict' and 'wantXMLValidation' must be true).
-            'wantXMLValidation' => true,
+            'wantXMLValidation' => $wantXMLValidation,
         ];
 
         return $samlConf;
