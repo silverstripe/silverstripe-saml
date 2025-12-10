@@ -3,6 +3,7 @@
 namespace SilverStripe\SAML\Helpers;
 
 use Exception;
+use OneLogin\Saml2\Auth;
 use Psr\Log\LoggerInterface;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPRequest;
@@ -13,7 +14,6 @@ use SilverStripe\Core\Injector\Injector;
 use SilverStripe\SAML\Authenticators\SAMLLoginHandler;
 use SilverStripe\SAML\Control\SAMLController;
 use SilverStripe\SAML\Services\SAMLConfiguration;
-use OneLogin\Saml2\Auth;
 
 /**
  * Class SAMLHelper
@@ -62,7 +62,7 @@ class SAMLHelper
      * @see SAMLController::acs() How the response is processed after the user is returned from the IdP
      * @return void This function will never return via normal control flow (see above).
      */
-    public function redirect(RequestHandler $requestHandler = null, HTTPRequest $request = null, $backURL = null)
+    public function redirect(?RequestHandler $requestHandler = null, ?HTTPRequest $request = null, $backURL = null)
     {
         // $data is not used - the form is just one button, with no fields.
         $auth = $this->getSAMLAuth();
