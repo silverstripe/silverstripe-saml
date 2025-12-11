@@ -35,6 +35,7 @@ We assume ADFS 2.0 or greater is used as an IdP.
   - [Allow insecure linking-by-email](#allow-insecure-linking-by-email)
   - [Adjust the requested AuthN contexts](#adjust-the-requested-authn-contexts)
   - [Allow authentication with alternative domains (e.g. subdomains)](#allow-authentication-with-alternative-domains-eg-subdomains)
+  - [Customise SAML configuration Security config](#customise-saml-configuration-security-config)
   - [Create your own SAML configuration for completely custom settings](#create-your-own-saml-configuration-for-completely-custom-settings)
   - [Additional GET Query Params for SAML](#additional-get-query-params-for-saml)
 - [Resources](#resources)
@@ -349,6 +350,26 @@ SilverStripe\SAML\Services\SAMLConfiguration:
   extra_acs_base:
     - https://app.example.com
     - https://docs.example.com
+```
+
+
+### Customise SAML configuration Security config
+
+You can customise all the SAML Configuration Security config options except for `requestedAuthnContext` which is handled by the [`authn_contexts`](#adjust-the-requested-authn-contexts) (see above). 
+
+```yaml
+SilverStripe\SAML\Services\SAMLConfiguration:
+  Security:
+    nameIdEncrypted: true
+    authnRequestsSigned: true
+    logoutRequestSigned: true
+    logoutResponseSigned: true
+    signMetadata: false
+    wantMessagesSigned: false
+    wantAssertionsSigned: true
+    wantNameIdEncrypted: false
+    signatureAlgorithm: "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"
+    wantXMLValidation: true
 ```
 
 ### Create your own SAML configuration for completely custom settings
