@@ -43,7 +43,7 @@ class SAMLAuthenticator extends MemberAuthenticator
      * @see SAMLLoginForm
      * @see SAMLMiddleware
      */
-    public function authenticate(array $data, HTTPRequest $request, ValidationResult &$result = null)
+    public function authenticate(array $data, HTTPRequest $request, ?ValidationResult &$result = null)
     {
         return null;
     }
