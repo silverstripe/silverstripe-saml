@@ -1,5 +1,3 @@
 en:
-  SilverStripe\SAML\Authenticators\SAMLLoginForm:
-    AUTHENTICATORNAME: SAML
   SilverStripe\SAML\Control\SAMLController:
     ERR_SAML_ACS_FAILURE: "Unfortunately we couldn't log you in. If this continues, please contact your I.T. department with the following reference: {ref}"

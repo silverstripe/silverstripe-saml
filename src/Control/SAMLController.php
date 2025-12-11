@@ -20,6 +20,7 @@ use SilverStripe\SAML\Authenticators\SAMLAuthenticator;
 use SilverStripe\SAML\Authenticators\SAMLLoginForm;
 use SilverStripe\SAML\Exceptions\AcsFailure;
 use SilverStripe\SAML\Helpers\SAMLHelper;
+use SilverStripe\SAML\Helpers\SAMLUserGroupMapper;
 use SilverStripe\SAML\Model\SAMLResponse;
 use SilverStripe\SAML\Services\SAMLConfiguration;
 use SilverStripe\Security\IdentityStore;
@@ -107,6 +108,12 @@ class SAMLController extends Controller
             $this->extend('updateRequest', $request);
 
             $member = $this->findOrCreateMember($guid, $claims['Email'] ?? null);
+
+            // Map IdP supplied group claims to Silverstripe CMS groups, if enabled (disabled by default)
+            // This is a more complex task than mapping claims (`mapAttributes()` above), so has its own helper class.
+            if ($this->configuration->get('map_user_group')) {
+                SAMLUserGroupMapper::singleton()->map($auth, $member, $uniqueErrorId);
+            }
 
             // Write a member with basic fields on every login, so that we at least have something if there is no
             // further sync (e.g. via LDAP). Silverstripe skips writes by default if there are no changes to saved
