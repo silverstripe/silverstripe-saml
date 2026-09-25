@@ -12,4 +12,8 @@ class SAMLResponse extends DataObject
         'ResponseID' => 'Varchar(255)',
         'Expiry' => 'Varchar(12)' // Returned by php-saml as a UTC datetime in unix epoch format
     ];
+
+    private static $indexes = [
+        'ResponseID' => true
+    ];
 }
