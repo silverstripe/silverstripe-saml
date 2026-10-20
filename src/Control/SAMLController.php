@@ -108,6 +108,8 @@ class SAMLController extends Controller
 
             $member = $this->findOrCreateMember($guid, $claims['Email'] ?? null);
 
+            $this->extend('updateMemberWithAuth', $member, $auth);
+
             // Write a member with basic fields on every login, so that we at least have something if there is no
             // further sync (e.g. via LDAP). Silverstripe skips writes by default if there are no changes to saved
             // properties. This will trigger LDAP update through LDAPMemberExtension::memberLoggedIn, if the LDAP module
